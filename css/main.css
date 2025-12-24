@@ -1095,7 +1095,7 @@ html {
     scroll-behavior: smooth;
 }
 
-/* Улучшенная обратная связь */
+/* обратная связь */
 .feedback-modal-content {
     max-width: 600px;
 }
@@ -1360,4 +1360,5 @@ select:focus {
     .btn:hover {
         transform: none;
     }
+
 }
