@@ -962,7 +962,6 @@ class ModalManager {
 }
 
 // ==================== МЕНЕДЖЕР КАСТОМНЫХ МОДАЛЬНЫХ ОКОН ====================
-// ==================== МЕНЕДЖЕР КАСТОМНЫХ МОДАЛЬНЫХ ОКОН ====================
 class CustomModalManager {
     private activeModalId: string | null = null;
     private currentCallback: ((result: boolean | string) => void) | null = null;
@@ -2184,4 +2183,5 @@ function setupOrderFilters(): void {
 document.addEventListener('DOMContentLoaded', initializeApp);
 
 // Инициализация глобального API клиента для window
+
 window.apiClient = globalApiClient;
