@@ -6,9 +6,14 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { useState, useEffect, type ReactNode } from "react";
+// import { Toaster } from "sonner";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { Layout as AppLayout } from "./components/layout/Layout";
+import { CartProvider } from "./context/CartContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -25,7 +30,7 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ru">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -41,8 +46,36 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Компонент для рендеринга только на клиенте
+function ClientOnly({ children }: { children: () => ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  if (!mounted) {
+    return null;
+  }
+  
+  return <>{children()}</>;
+}
+
 export default function App() {
-  return <Outlet />;
+  return (
+    <ClientOnly>
+      {() => (
+        <AuthProvider>
+          <CartProvider>
+            {/* <Toaster position="top-center" /> */}
+            <AppLayout>
+              <Outlet />
+            </AppLayout>
+          </CartProvider>
+        </AuthProvider>
+      )}
+    </ClientOnly>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

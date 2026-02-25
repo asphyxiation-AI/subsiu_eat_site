@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Модель блюда
+model Product {
+  id          String      @id @default(uuid())
+  name        String
+  description String
+  price       Decimal     @db.Decimal(10, 2)
+  category    String
+  image       String
+  isAvailable Boolean     @default(true)
+  isVisible   Boolean     @default(true)  // Скрыть на сегодня (кнопка "Не добавлять")
+  dayOfWeek   Int         // 1-14 для двухнедельного цикла
+  weekType    Int         // 1 или 2 (какая неделя в цикле)
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+// Настройки меню (хранит опубликованную неделю)
+model MenuSettings {
+  id              String   @id @default(uuid())
+  publishedWeek   Int      @default(1)  // Какая неделя опубликована (1 или 2)
+  updatedAt       DateTime @updatedAt
+}
+
+// Статусы заказа
+enum OrderStatus {
+  PENDING
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+// Модель заказа
+model Order {
+  id          String      @id @default(uuid())
+  createdAt   DateTime    @default(now())
+  totalPrice  Decimal     @db.Decimal(10, 2)
+  pickupTime  DateTime
+  status      OrderStatus @default(PENDING)
+  userSub     String?     // ID из Keycloak
+  orderItems  OrderItem[]
+}
+
+// Связующая таблица заказов и продуктов
+model OrderItem {
+  id           String  @id @default(uuid())
+  quantity     Int
+  price        Decimal @db.Decimal(10, 2) // Цена на момент покупки
+  productName  String  // Название блюда на момент заказа
+  orderId      String
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product @relation(fields: [productId], references: [id])
+}

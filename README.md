@@ -1,87 +1,68 @@
-# Welcome to React Router!
+Этап 1: Проектирование и Фундамент (04.01.2026 — 15.01.2026)
 
-A modern, production-ready template for building full-stack React applications using React Router.
+    04.01: Инициализация проекта на React Router v7. Настройка архитектуры монолита.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+    08.01: Разработка дизайн-системы. Внедрение корпоративной палитры (Royal Blue, Orange, Sky Blue).
 
-## Features
+    12.01: Настройка Prisma ORM и проектирование схемы базы данных (модели User, Dish, Order, OrderItem).
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+    15.01: Первичный наполнение базы (Seed) стартовым меню столовой.
 
-## Getting Started
+Этап 2: Интеграция безопасности (16.01.2026 — 30.01.2026)
 
-### Installation
+    16.01: Развертывание локального сервера Keycloak.
 
-Install the dependencies:
+    22.01: Настройка OpenID Connect (OIDC) и ролевой модели (admin / student).
 
-```bash
-npm install
-```
+    30.01: Реализация защищенных роутов (Guard Routes) для админ-панели.
 
-### Development
+Этап 3: Витрина и Пользовательский опыт (01.02.2026 — 12.02.2026)
 
-Start the development server with HMR:
+    01.02: Создание интерактивного меню с фильтрацией по категориям.
 
-```bash
-npm run dev
-```
+    05.02: Реализация Корзины заказов (Client-side state) и страницы детального просмотра.
 
-Your application will be available at `http://localhost:5173`.
+    10.02: Интеграция системы уведомлений (Sonner) и скелетон-загрузок.
 
-## Building for Production
+    12.02: Настройка логики рабочего времени столовой (08:00–16:00).
 
-Create a production build:
+Этап 4: Администрирование и Оплата (13.02.2026 — 20.02.2026)
 
-```bash
-npm run build
-```
+    13.02: Запуск Админ-панели управления заказами. Реализация смены статусов в реальном времени.
 
-## Deployment
+    17.02: Интеграция редиректа на платежный шлюз университета (pay.sibsiu.ru).
 
-### Docker Deployment
+    20.02: Разработка модуля «Конструктор меню» для управления ассортиментом блюд (Hide/Show logic).
 
-To build and run using Docker:
+Этап 5: Оптимизация и Финальный Билд (21.02.2026 — 25.02.2026)
 
-```bash
-docker build -t my-app .
+    21.02: Исправление критических багов (Redirect URIs, React Hooks конфликты).
 
-# Run the container
-docker run -p 3000:3000 my-app
-```
+    23.02: Тестирование производительности и кэширования.
 
-The containerized application can be deployed to any platform that supports Docker, including:
+    25.02: Финальная сборка (Production Build) и подготовка документации.
+-------------------------------------------------------------
+Технология______| Назначение
+React Router v7_| Основной фреймворк (Framework Mode)
+PostgreSQL 17___| Реляционная база данных
+Prisma__________| ORM для работы с БД
+Keycloak________|SSO Авторизация и безопасность
+Tailwind CSS____| Стилизация и адаптивный дизайн
+TypeScript______| Строгая типизация кода
+-------------------------------------------------------------
+1. Установка зависимостей
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
+    npm install
 
-### DIY Deployment
+2. Подготовка БД
 
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
+    npx prisma generate
+    npx prisma migrate deploy
 
-Make sure to deploy the output of `npm run build`
+3. Запуск в продакшн-режиме
 
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+    npm run build
+    npm run start
+-------------------------------------------------------------
+Организация: СибГИУ (Сибирский государственный индустриальный университет)
+Статус проекта: MVP завершен (25.02.2026)
