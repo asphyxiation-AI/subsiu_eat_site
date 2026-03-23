@@ -26,11 +26,11 @@ module.exports = {
       // Окружение
       env: {
         NODE_ENV: 'development',
-        PORT: 3000
+        PORT: 5173
       },
       env_production: {
         NODE_ENV: 'production',
-        PORT: 3000
+        PORT: 5173
       },
       
       // Логи

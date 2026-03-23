@@ -1,7 +1,6 @@
 import { Link } from "react-router";
 import { Utensils, ShoppingBag, ArrowLeft } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { getKeycloak } from "../lib/auth.client";
 
 export function meta() {
   return [
@@ -13,22 +12,8 @@ export function meta() {
 export default function AdminDashboard() {
   const { isAuthenticated, hasRole, user } = useAuth();
   
-  // Расширенная проверка роли админа
-  const keycloak = getKeycloak();
-  const tokenParsed = keycloak?.tokenParsed;
-  
-  const checkIsAdmin = (): boolean => {
-    if (!tokenParsed) return false;
-    if (hasRole("admin")) return true;
-    const realmRoles = tokenParsed.realm_access?.roles || [];
-    if (realmRoles.some((r: string) => r.toLowerCase() === "admin")) return true;
-    const clientRoles = tokenParsed.resource_access?.["canteen-web"]?.roles || [];
-    if (clientRoles.some((r: string) => r.toLowerCase() === "admin")) return true;
-    if (tokenParsed.preferred_username === "admin_sibsui") return true;
-    return false;
-  };
-  
-  const isAdmin = checkIsAdmin();
+  // Проверка роли админа через AuthContext
+  const isAdmin = hasRole("admin");
 
   if (!isAuthenticated) {
     return (

@@ -22,7 +22,7 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-2 text-white/80 text-sm">
               <MapPin className="w-4 h-4" />
-              <span>г. Новокузнецк, ул. Кирова, 7</span>
+              <span>г. Новокузнецк, ул. Кирова, 42</span>
             </div>
           </div>
 
@@ -64,15 +64,15 @@ export function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-white/80">
                 <Phone className="w-4 h-4" />
-                <span>+7 (3843) 74-25-01</span>
+                <span>+7 (3843) 74-35-33</span>
               </li>
               <li className="flex items-center gap-2 text-white/80">
                 <Mail className="w-4 h-4" />
-                <span>canteen@sibsiu.ru</span>
+                <span>aparceva_nv@sibsiu.ru</span>
               </li>
               <li className="flex items-start gap-2 text-white/80">
                 <MapPin className="w-4 h-4 mt-0.5" />
-                <span>г. Новокузнецк, ул. Кирова, 7, корпус 1</span>
+                <span>г. Новокузнецк, ул. Кирова, 42</span>
               </li>
             </ul>
           </div>
@@ -90,7 +90,7 @@ export function Footer() {
                 VK
               </a>
               <a
-                href="https://t.me/sibsiu"
+                href="https://t.me/stolovayasibsiu"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 hover:bg-white/30 transition-all hover:scale-110 text-center font-bold"
@@ -113,7 +113,7 @@ export function Footer() {
               © {currentYear} Столовая СибГИУ. Все права защищены.
             </p>
             <p className="text-white/60 text-sm">
-              Разработано студентом СибГИУ с ❤️
+              Разработано студентом СибГИУ
             </p>
           </div>
         </div>

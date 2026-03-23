@@ -1,22 +1,24 @@
-import { ShoppingCart, User, Menu, Settings } from "lucide-react";
+import { ShoppingCart, User, Menu, Settings, LogOut } from "lucide-react";
 import { useState } from "react";
-import { Link, NavLink } from "react-router";
+import { Link, NavLink, useNavigate } from "react-router";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
-import { loginKeycloak, getKeycloak } from "../../lib/auth.client";
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { totalItems } = useCart();
-  const { isAuthenticated, hasRole } = useAuth();
+  const { isAuthenticated, hasRole, logout } = useAuth();
+  const navigate = useNavigate();
 
-  // Проверка роли admin через Keycloak напрямую
-  const keycloak = typeof window !== "undefined" ? getKeycloak() : null;
-  const keycloakHasAdminRole = keycloak?.hasRealmRole("admin") || false;
-  const isAdmin = hasRole("admin") || keycloakHasAdminRole;
+  // Проверка роли admin через AuthContext
+  const isAdmin = hasRole("admin");
 
   const handleLogin = () => {
-    window.location.href = "/login";
+    navigate("/login");
+  };
+
+  const handleLogout = () => {
+    logout();
   };
 
   return (

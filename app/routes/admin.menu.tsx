@@ -17,7 +17,6 @@ import {
   Filter
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { getKeycloak } from "../lib/auth.client";
 import { prisma } from "../lib/db.server";
 import type { Route } from "./+types/admin.menu";
 
@@ -203,21 +202,8 @@ export default function AdminMenu({ loaderData }: Route.ComponentProps) {
   const [filterDay, setFilterDay] = useState<number | null>(null);
   const [filterWeek, setFilterWeek] = useState<number | null>(null);
 
-  const keycloak = getKeycloak();
-  const tokenParsed = keycloak?.tokenParsed;
-
-  const checkIsAdmin = (): boolean => {
-    if (!tokenParsed) return false;
-    if (hasRole("admin")) return true;
-    const realmRoles = tokenParsed.realm_access?.roles || [];
-    if (realmRoles.some((r: string) => r.toLowerCase() === "admin")) return true;
-    const clientRoles = tokenParsed.resource_access?.["canteen-web"]?.roles || [];
-    if (clientRoles.some((r: string) => r.toLowerCase() === "admin")) return true;
-    if (tokenParsed.preferred_username === "admin_sibsui") return true;
-    return false;
-  };
-
-  const isAdmin = checkIsAdmin();
+  // Проверка роли админа через AuthContext
+  const isAdmin = hasRole("admin");
 
   if (!isAuthenticated) {
     return (
@@ -245,16 +231,6 @@ export default function AdminMenu({ loaderData }: Route.ComponentProps) {
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-6">
           <h1 className="text-2xl font-bold text-red-900 mb-2">Доступ запрещён</h1>
           <p className="text-red-700">У вас нет прав администратора</p>
-        </div>
-
-        <div className="bg-gray-50 rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Диагностика</h2>
-          <div className="mb-4">
-            <h3 className="font-semibold text-gray-700 mb-2">Токен (decoded):</h3>
-            <pre className="bg-gray-800 text-green-400 p-4 rounded-xl overflow-x-auto text-xs">
-              {JSON.stringify(tokenParsed, null, 2)}
-            </pre>
-          </div>
         </div>
       </div>
     );

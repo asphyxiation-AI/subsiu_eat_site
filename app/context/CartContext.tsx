@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { LOGOUT_EVENT } from "./AuthContext";
 
 export interface CartItem {
   id: string;
@@ -37,6 +38,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       console.error("Error loading cart from localStorage:", error);
     }
     setIsLoaded(true);
+
+    // Слушаем событие logout для очистки корзины
+    const handleLogout = () => {
+      clearCart();
+    };
+    window.addEventListener(LOGOUT_EVENT, handleLogout);
+    
+    return () => {
+      window.removeEventListener(LOGOUT_EVENT, handleLogout);
+    };
   }, []);
 
   // Сохранение корзины в localStorage при изменении
@@ -78,6 +89,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setItems([]);
+    localStorage.removeItem(CART_STORAGE_KEY);
   };
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);

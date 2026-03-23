@@ -63,18 +63,14 @@ function ClientOnly({ children }: { children: () => ReactNode }) {
 
 export default function App() {
   return (
-    <ClientOnly>
-      {() => (
-        <AuthProvider>
-          <CartProvider>
-            {/* <Toaster position="top-center" /> */}
-            <AppLayout>
-              <Outlet />
-            </AppLayout>
-          </CartProvider>
-        </AuthProvider>
-      )}
-    </ClientOnly>
+    <AuthProvider>
+      <CartProvider>
+        {/* <Toaster position="top-center" /> */}
+        <AppLayout>
+          <Outlet />
+        </AppLayout>
+      </CartProvider>
+    </AuthProvider>
   );
 }
 

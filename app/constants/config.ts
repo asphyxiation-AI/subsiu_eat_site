@@ -19,6 +19,9 @@ export const KEYCLOAK_URL = import.meta.env.VITE_KEYCLOAK_URL || "http://localho
 export const KEYCLOAK_REALM = import.meta.env.VITE_KEYCLOAK_REALM || "my-app";
 export const KEYCLOAK_CLIENT_ID = import.meta.env.VITE_KEYCLOAK_CLIENT_ID || "canteen-web";
 
+// Client Secret для Keycloak (с VITE_ префиксом для передачи на клиент)
+export const KEYCLOAK_CLIENT_SECRET = import.meta.env.VITE_KEYCLOAK_CLIENT_SECRET || "VCHfWLinO4Vx8hM2e4a8fVpflPuSButf";
+
 // Оплата
 export const PAYMENT_URL = import.meta.env.VITE_PAYMENT_URL || "https://pay.sibsiu.ru/";
 
