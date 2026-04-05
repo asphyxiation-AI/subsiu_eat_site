@@ -9,18 +9,31 @@ datasource db {
   provider = "postgresql"
 }
 
+// Модель категории
+model Category {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  slug      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
 // Модель блюда
 model Product {
   id          String      @id @default(uuid())
   name        String
-  description String
+  description String?
   price       Decimal     @db.Decimal(10, 2)
-  category    String
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   image       String
   isAvailable Boolean     @default(true)
   isVisible   Boolean     @default(true)  // Скрыть на сегодня (кнопка "Не добавлять")
   dayOfWeek   Int         // 1-14 для двухнедельного цикла
   weekType    Int         // 1 или 2 (какая неделя в цикле)
+  calories    Int?        // КБЖУ: калории
+  weight      Int?        // КБЖУ: вес в граммах
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -44,13 +57,15 @@ enum OrderStatus {
 
 // Модель заказа
 model Order {
-  id          String      @id @default(uuid())
-  createdAt   DateTime    @default(now())
-  totalPrice  Decimal     @db.Decimal(10, 2)
-  pickupTime  DateTime
-  status      OrderStatus @default(PENDING)
-  userSub     String?     // ID из Keycloak
-  orderItems  OrderItem[]
+  id            String      @id @default(uuid())
+  orderNumber   Int         @unique @default(autoincrement())
+  createdAt     DateTime    @default(now())
+  totalPrice    Decimal     @db.Decimal(10, 2)
+  pickupTime    DateTime
+  status        OrderStatus @default(PENDING)
+  userSub       String?     // ID из Keycloak
+  cancelReason  String?     // Причина отмены заказа
+  orderItems    OrderItem[]
 }
 
 // Связующая таблица заказов и продуктов

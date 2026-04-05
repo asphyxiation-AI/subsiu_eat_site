@@ -133,27 +133,29 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Тестовые аккаунты */}
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl text-sm">
-            <p className="font-medium text-green-800 mb-3 flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              Тестовые аккаунты:
-            </p>
-            <div className="space-y-2 text-green-700">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">Админ:</span>
-                <code className="bg-green-100 px-2 py-1 rounded">admin</code>
-                <span>/</span>
-                <code className="bg-green-100 px-2 py-1 rounded">admin123</code>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">Студент:</span>
-                <code className="bg-green-100 px-2 py-1 rounded">student</code>
-                <span>/</span>
-                <code className="bg-green-100 px-2 py-1 rounded">student123</code>
+          {/* Тестовые аккаунты - только в dev режиме */}
+          {import.meta.env.DEV && (
+            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl text-sm">
+              <p className="font-medium text-green-800 mb-3 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                Тестовые аккаунты:
+              </p>
+              <div className="space-y-2 text-green-700">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">Админ:</span>
+                  <code className="bg-green-100 px-2 py-1 rounded">admin</code>
+                  <span>/</span>
+                  <code className="bg-green-100 px-2 py-1 rounded">admin123</code>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">Студент:</span>
+                  <code className="bg-green-100 px-2 py-1 rounded">student</code>
+                  <span>/</span>
+                  <code className="bg-green-100 px-2 py-1 rounded">student123</code>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Информация внизу */}

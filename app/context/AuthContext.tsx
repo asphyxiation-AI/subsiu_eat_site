@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from "react";
-import { KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET } from "../constants/config";
+import { KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID } from "../constants/config";
 
 interface UserProfile {
   id: string;
@@ -38,22 +38,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = useCallback(async () => {
     try {
-      const savedAuth = localStorage.getItem("sibgiu_auth");
-      if (savedAuth) {
-        const authData = JSON.parse(savedAuth);
-        // Проверяем, не истёк ли токен (24 часа)
-        if (Date.now() - authData.timestamp < 24 * 60 * 60 * 1000) {
-          setUser(authData.user);
+      // Запрашиваем данные авторизации с сервера (читает из HTTP-only куки)
+      const response = await fetch("/api/check-auth", {
+        credentials: "include", // Важно для отправки кук
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.authenticated && data.user) {
+          setUser(data.user);
           setIsAuthenticated(true);
           setIsLoading(false);
           return;
-        } else {
-          localStorage.removeItem("sibgiu_auth");
         }
       }
     } catch (e) {
       console.error("Auth check error:", e);
-      localStorage.removeItem("sibgiu_auth");
     }
     setIsLoading(false);
   }, []);
@@ -85,14 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         roles: data.user?.roles || ["student"],
       };
 
-      // Сохраняем в localStorage
-      const authData = { 
-        user: userData, 
-        timestamp: Date.now(),
-        accessToken: data.accessToken 
-      };
-      localStorage.setItem("sibgiu_auth", JSON.stringify(authData));
-
+      // Токены теперь хранятся в HTTP-only куках на сервере
+      // Здесь только сохраняем данные пользователя в память приложения
       setUser(userData);
       setIsAuthenticated(true);
 
@@ -104,7 +98,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("sibgiu_auth");
     setIsAuthenticated(false);
     setUser(null);
     

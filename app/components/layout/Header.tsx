@@ -26,44 +26,37 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Левая часть - логотип и название */}
-          <Link to="/" className="flex items-center gap-3 no-underline">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border-2 border-white/30 shadow-lg">
-              <span className="text-white font-bold text-lg md:text-xl drop-shadow-md">С</span>
-            </div>
-            <span className="text-lg md:text-xl font-bold text-white drop-shadow-lg">
+          <div className="flex items-center gap-3">
+            <a href="https://www.sibsiu.ru/" target="_blank" rel="noopener noreferrer" className="no-underline">
+              <div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
+                <img src="/logo_sibsiu.png" alt="Логотип СибГИУ" className="w-full h-full object-contain" />
+              </div>
+            </a>
+            <Link to="/" className="text-lg md:text-xl font-bold text-white drop-shadow-lg no-underline hover:text-white/90 transition-colors">
               Столовая СибГИУ
-            </span>
-          </Link>
+            </Link>
+          </div>
 
           {/* Центр - навигация (десктоп) */}
           <nav className="hidden md:flex items-center gap-8">
-            <NavLink
-              to="/"
-              className={({ isActive }) => 
-                isActive ? "text-white font-bold drop-shadow-lg border-b-2 border-white pb-1" : 
-                "text-white/90 hover:text-white transition-all duration-200 font-medium drop-shadow-md no-underline hover:scale-105"
-              }
+            <button
+              onClick={() => navigate("/#menu")}
+              className="text-white/90 hover:text-white transition-all duration-200 font-medium drop-shadow-md hover:scale-105 bg-transparent border-none cursor-pointer"
             >
               Меню
-            </NavLink>
-            <NavLink
-              to="/#about"
-              className={({ isActive }) => 
-                isActive ? "text-white font-bold drop-shadow-lg border-b-2 border-white pb-1" : 
-                "text-white/90 hover:text-white transition-all duration-200 font-medium drop-shadow-md no-underline hover:scale-105"
-              }
+            </button>
+            <button
+              onClick={() => navigate("/#about")}
+              className="text-white/90 hover:text-white transition-all duration-200 font-medium drop-shadow-md hover:scale-105 bg-transparent border-none cursor-pointer"
             >
               О нас
-            </NavLink>
-            <NavLink
-              to="/#contacts"
-              className={({ isActive }) => 
-                isActive ? "text-white font-bold drop-shadow-lg border-b-2 border-white pb-1" : 
-                "text-white/90 hover:text-white transition-all duration-200 font-medium drop-shadow-md no-underline hover:scale-105"
-              }
+            </button>
+            <button
+              onClick={() => navigate("/#contacts")}
+              className="text-white/90 hover:text-white transition-all duration-200 font-medium drop-shadow-md hover:scale-105 bg-transparent border-none cursor-pointer"
             >
               Контакты
-            </NavLink>
+            </button>
           </nav>
 
           {/* Правая часть - кнопки */}
@@ -107,9 +100,9 @@ export function Header() {
                 <User className="w-6 h-6 text-white drop-shadow-md" />
               </NavLink>
             ) : (
-              <button
-                onClick={handleLogin}
-                className="hidden md:flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-white text-[#0066CC] hover:bg-gray-100 transition-all duration-300 font-bold shadow-lg hover:shadow-xl hover:scale-105"
+              <button 
+                onClick={() => navigate("/login")}
+                className="bg-white hover:bg-gray-100 text-[#0066CC] font-medium py-2 px-4 rounded-xl cursor-pointer"
               >
                 Войти
               </button>
@@ -128,36 +121,24 @@ export function Header() {
         {/* Мобильное меню */}
         {isMobileMenuOpen && (
           <nav className="md:hidden py-4 border-t border-white/20 backdrop-blur-md bg-[#0066CC]/50">
-            <NavLink
-              to="/"
-              className={({ isActive }) => 
-                isActive ? "block py-3 text-white font-bold border-b-2 border-white/50" : 
-                "block py-3 text-white/90 hover:text-white transition-all duration-200 font-medium no-underline"
-              }
-              onClick={() => setIsMobileMenuOpen(false)}
+            <button
+              onClick={() => { navigate("/#menu"); setIsMobileMenuOpen(false); }}
+              className="block w-full text-left py-3 text-white/90 hover:text-white transition-all duration-200 font-medium bg-transparent border-none cursor-pointer"
             >
               Меню
-            </NavLink>
-            <NavLink
-              to="/#about"
-              className={({ isActive }) => 
-                isActive ? "block py-3 text-white font-bold border-b-2 border-white/50" : 
-                "block py-3 text-white/90 hover:text-white transition-all duration-200 font-medium no-underline"
-              }
-              onClick={() => setIsMobileMenuOpen(false)}
+            </button>
+            <button
+              onClick={() => { navigate("/#about"); setIsMobileMenuOpen(false); }}
+              className="block w-full text-left py-3 text-white/90 hover:text-white transition-all duration-200 font-medium bg-transparent border-none cursor-pointer"
             >
               О нас
-            </NavLink>
-            <NavLink
-              to="/#contacts"
-              className={({ isActive }) => 
-                isActive ? "block py-3 text-white font-bold border-b-2 border-white/50" : 
-                "block py-3 text-white/90 hover:text-white transition-all duration-200 font-medium no-underline"
-              }
-              onClick={() => setIsMobileMenuOpen(false)}
+            </button>
+            <button
+              onClick={() => { navigate("/#contacts"); setIsMobileMenuOpen(false); }}
+              className="block w-full text-left py-3 text-white/90 hover:text-white transition-all duration-200 font-medium bg-transparent border-none cursor-pointer"
             >
               Контакты
-            </NavLink>
+            </button>
             <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-white/20">
               {/* Кнопка админа на мобильных */}
               {isAuthenticated && isAdmin && (

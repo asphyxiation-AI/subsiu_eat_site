@@ -38,12 +38,15 @@ export async function loader() {
       dayOfWeek: currentCycleDay.dayOfWeek,
       isVisible: true,
     },
+    include: { category: true },
     orderBy: { name: "asc" },
   });
   
   const menuItems = products.map(p => ({
     ...p,
+    category: p.category?.name || "Наборы",
     price: Number(p.price),
+    description: p.description || "",
   }));
   
   const todayDish = menuItems.length > 0 
@@ -161,11 +164,27 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   useEffect(() => {
     setIsLoaded(true);
+    
+    // Обработка хеша в URL при загрузке
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      setTimeout(() => {
+        const element = document.getElementById(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    }
   }, []);
 
   const scrollToMenu = () => {
     const menuSection = document.getElementById("menu");
     menuSection?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const scrollToContacts = () => {
+    const contactsSection = document.getElementById("contacts");
+    contactsSection?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleAddToCart = (item: MenuItem) => {
@@ -182,7 +201,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      <section className="relative min-h-[70vh] flex items-center overflow-hidden">
         {/* Фоновые элементы */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-violet-400/30 to-fuchsia-400/30 rounded-full blur-3xl animate-pulse" />
@@ -194,7 +213,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <div className="absolute top-20 left-10 w-32 h-32 border-2 border-violet-200/50 rounded-full animate-spin" style={{ animationDuration: '20s' }} />
         <div className="absolute bottom-32 right-20 w-24 h-24 border-2 border-orange-200/50 rounded-full animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
         
-        <div className="container mx-auto px-4 relative z-10 pt-24">
+        <div className="container mx-auto px-4 relative z-10 pt-2 pb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             {/* Текст */}
             <div className={`space-y-8 transition-all duration-1000 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
@@ -235,8 +254,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
 
-                <button className="px-8 py-4 bg-white/80 backdrop-blur-sm border border-slate-200 text-slate-700 font-bold rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                  Как это работает?
+                <button onClick={scrollToContacts} className="px-8 py-4 bg-white/80 backdrop-blur-sm border border-slate-200 text-slate-700 font-bold rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                  Контакты
                 </button>
               </div>
 
@@ -248,7 +267,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 </div>
                 <div className="w-px bg-slate-200" />
                 <div className="text-center">
-                  <div className="text-3xl font-black bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">5-10мин</div>
+                  <div className="text-3xl font-black bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">1-5мин</div>
                   <div className="text-sm text-slate-500">среднее время ожидания</div>
                 </div>
                 <div className="w-px bg-slate-200" />
@@ -265,7 +284,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 {/* Основное изображение */}
                 <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-purple-500/20">
                   <img
-                    src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&h=600&fit=crop"
+                    src="/banner.png"
                     alt="Вкусная еда"
                     className="w-full h-[500px] object-cover"
                   />
@@ -303,7 +322,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 relative">
+      <section className="py-24 relative bg-gradient-to-r from-violet-100 via-purple-100 to-fuchsia-100">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Карточка 1 */}
@@ -315,7 +334,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 </div>
                 <h3 className="text-2xl font-bold text-slate-800 mb-3">Экономия времени</h3>
                 <p className="text-slate-600 leading-relaxed">
-                  Оформите заказ онлайн и заберите его в удобное время без стояния в очереди
+                  Оформите заказ онлайн и заберите его в удобное время без очереди
                 </p>
               </div>
             </div>
@@ -341,9 +360,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/30">
                   <Wallet className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-800 mb-3">Родные цены</h3>
+                <h3 className="text-2xl font-bold text-slate-800 mb-3">Доступные цены</h3>
                 <p className="text-slate-600 leading-relaxed">
-                  Самые доступные цены на комплексные обеды среди всех столовых университета
+                  Самые низкие цены на комплексные обеды для студентов
                 </p>
               </div>
             </div>
@@ -493,7 +512,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     </div>
                     <div>
                       <h4 className="font-bold text-slate-800 mb-1">Адрес</h4>
-                      <p className="text-slate-600">г. Новокузнецк, пр. Бардина, 42</p>
+                      <p className="text-slate-600">г. Новокузнецк, Кирова, 42к3</p>
                     </div>
                   </div>
 
@@ -515,15 +534,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 <h4 className="font-bold text-xl mb-4">Режим работы</h4>
                 <ul className="space-y-3">
                   <li className="flex justify-between">
-                    <span className="text-white/90">Понедельник - Пятница</span>
+                    <span className="text-white/90">Понедельник - Четверг</span>
                     <span className="font-bold">08:00 - 16:00</span>
                   </li>
                   <li className="flex justify-between">
-                    <span className="text-white/90">Суббота</span>
-                    <span className="font-bold">09:00 - 14:00</span>
+                    <span className="text-white/90">Пятница</span>
+                    <span className="font-bold">08:00 - 15:00</span>
                   </li>
                   <li className="flex justify-between">
-                    <span className="text-white/70">Воскресенье</span>
+                    <span className="text-white/70">Суббота - Воскресенье</span>
                     <span className="text-white/50">Выходной</span>
                   </li>
                 </ul>
@@ -531,9 +550,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </div>
 
             {/* Карта */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl overflow-hidden border border-slate-200/50 shadow-lg h-[400px]">
+            <div className="bg-white/80 backdrop-blur-xl rounded-3xl overflow-hidden border border-slate-200/50 shadow-lg h-[100%]">
               <iframe
-                src="https://yandex.ru/map-widget/v1/?ll=87.128618%2C53.756404&z=16&pt=87.128353%2C53.756440%2Cpm2rdm"
+                src="https://yandex.ru/map-widget/v1/?ll=87.128618%2C53.756404&z=16&pt=87.128483%2C53.756440%2Cpm2rdm"
                 width="100%"
                 height="100%"
                 frameBorder="0"

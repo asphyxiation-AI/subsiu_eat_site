@@ -1,54 +1,54 @@
 import { data, redirect } from "react-router";
+import { KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID } from "../constants/config";
+import { getKeycloakClientSecret } from "../constants/config";
 
 export async function action({ request }: { request: Request }) {
-  // Получаем refresh token из cookie для отзыва в Keycloak
+  // Получаем refresh token из cookie
   const cookieHeader = request.headers.get("Cookie");
   const cookies: Record<string, string> = {};
   
   if (cookieHeader) {
     cookieHeader.split(";").forEach((cookie) => {
-      const [name, value] = cookie.trim().split("=");
-      if (name && value) {
-        cookies[name] = value;
+      const parts = cookie.trim().split("=");
+      if (parts.length >= 2) {
+        cookies[parts[0]] = parts.slice(1).join("=");
       }
     });
   }
 
   const refreshToken = cookies["refresh_token"];
   
-  // Пытаемся отозвать токен в Keycloak (опционально)
+  // Пытаемся отозвать токен в Keycloak
   if (refreshToken) {
     try {
-      const keycloakUrl = cookies["keycloak_url"];
-      const keycloakRealm = cookies["keycloak_realm"];
-      
-      if (keycloakUrl && keycloakRealm) {
-        await fetch(`${keycloakUrl}/realms/${keycloakRealm}/protocol/openid-connect/logout`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            client_id: cookies["client_id"] || "",
-            refresh_token: refreshToken,
-          }),
-        });
-      }
+      const clientSecret = getKeycloakClientSecret();
+      await fetch(`${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          client_id: KEYCLOAK_CLIENT_ID,
+          client_secret: clientSecret,
+          refresh_token: refreshToken,
+        }),
+      });
     } catch (error) {
-      console.error("Keycloak logout failed:", error);
+      console.warn("Keycloak logout warning:", error);
     }
   }
 
-  // Очищаем cookies
-  return data(
-    { success: true },
-    {
-      headers: {
-        "Set-Cookie": [
-          "access_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0",
-          "refresh_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0",
-        ].join(", "),
-      },
-    }
-  );
+  // Secure только в production
+  const isProduction = process.env.NODE_ENV === "production";
+  const cookieBase = `Path=/; HttpOnly; SameSite=Lax${isProduction ? "; Secure" : ""}`;
+
+  // Очищаем cookies и редиректим на главную
+  return redirect("/", {
+    headers: {
+      "Set-Cookie": [
+        `access_token=; ${cookieBase}; Max-Age=0`,
+        `refresh_token=; ${cookieBase}; Max-Age=0`,
+      ].join(", "),
+    },
+  });
 }

@@ -1,0 +1,83 @@
+{
+  "realm": "canteen",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "description": "Администратор столовой",
+        "composite": false
+      },
+      {
+        "name": "student",
+        "description": "Студент",
+        "composite": false
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "canteen-web",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "VCHfWLinO4Vx8hM2e4a8fVpflPuSButf",
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "http://localhost:5173",
+        "https://sibsiu-canteen.ru/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "https://sibsiu-canteen.ru"
+      ],
+      "attributes": {
+        "access.token.lifespan": "300",
+        "refresh.token.lifespan": "86400"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Администратор",
+      "lastName": "Системы",
+      "email": "admin@sibsiu.ru",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["admin"]
+    },
+    {
+      "username": "student",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Иван",
+      "lastName": "Студентов",
+      "email": "student@sibsiu.ru",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "student123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["student"]
+    }
+  ]
+}

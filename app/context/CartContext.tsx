@@ -9,6 +9,24 @@ export interface CartItem {
   image: string;
 }
 
+// Проверка что объект соответствует типу CartItem
+function isValidCartItem(item: unknown): item is CartItem {
+  if (typeof item !== "object" || item === null) return false;
+  const obj = item as Record<string, unknown>;
+  return (
+    typeof obj.id === "string" &&
+    typeof obj.name === "string" &&
+    typeof obj.price === "number" &&
+    typeof obj.quantity === "number" &&
+    typeof obj.image === "string"
+  );
+}
+
+// Проверка массива CartItem
+function isValidCartItems(arr: unknown): arr is CartItem[] {
+  return Array.isArray(arr) && arr.every(isValidCartItem);
+}
+
 interface CartContextType {
   items: CartItem[];
   addItem: (item: Omit<CartItem, "quantity">) => void;
@@ -32,16 +50,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       const savedCart = localStorage.getItem(CART_STORAGE_KEY);
       if (savedCart) {
-        setItems(JSON.parse(savedCart));
+        const parsed = JSON.parse(savedCart);
+        // Проверяем что данные соответствуют ожидаемому типу
+        if (isValidCartItems(parsed)) {
+          setItems(parsed);
+        } else {
+          // Данные повреждены - очищаем
+          console.warn("Cart data corrupted, clearing...");
+          localStorage.removeItem(CART_STORAGE_KEY);
+        }
       }
     } catch (error) {
       console.error("Error loading cart from localStorage:", error);
+      localStorage.removeItem(CART_STORAGE_KEY);
     }
     setIsLoaded(true);
 
     // Слушаем событие logout для очистки корзины
     const handleLogout = () => {
-      clearCart();
+      clearCart()
     };
     window.addEventListener(LOGOUT_EVENT, handleLogout);
     

@@ -18,11 +18,10 @@ export function Footer() {
             </div>
             <p className="text-white/80 text-sm mb-4">
               Вкусная и здоровая еда для студентов и сотрудников университета. 
-              Мы работаем с 08:00 до 16:00.
             </p>
             <div className="flex items-center gap-2 text-white/80 text-sm">
               <MapPin className="w-4 h-4" />
-              <span>г. Новокузнецк, ул. Кирова, 42</span>
+              <span>г. Новокузнецк, ул. Кирова, 42к3</span>
             </div>
           </div>
 
@@ -72,7 +71,7 @@ export function Footer() {
               </li>
               <li className="flex items-start gap-2 text-white/80">
                 <MapPin className="w-4 h-4 mt-0.5" />
-                <span>г. Новокузнецк, ул. Кирова, 42</span>
+                <span>г. Новокузнецк, ул. Кирова, 42к3</span>
               </li>
             </ul>
           </div>
@@ -100,7 +99,8 @@ export function Footer() {
             </div>
             <div className="mt-6 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
               <p className="text-sm font-medium">Время работы:</p>
-              <p className="text-white/80 text-sm">Пн-Пт: 08:00 - 16:00</p>
+              <p className="text-white/80 text-sm">Пн-Чт: 08:00 - 16:00</p>
+              <p className="text-white/80 text-sm">Пт: 08:00 - 15:00</p>
               <p className="text-white/60 text-xs mt-1">Сб-Вс: Выходной</p>
             </div>
           </div>

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Minus, Plus, Trash2, ShoppingCart, ArrowLeft, Clock } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingCart, ArrowLeft, Clock, CheckCircle } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { ORDER_START_TIME, ORDER_END_TIME, SKIP_TIME_CHECK, TIMEZONE, PAYMENT_URL } from "../constants/config";
+import { ORDER_START_TIME, ORDER_END_TIME, SKIP_TIME_CHECK, TIMEZONE } from "../constants/config";
 import type { Route } from "./+types/cart";
 
 export function meta({}: Route.MetaArgs) {
@@ -51,7 +51,12 @@ export default function Cart() {
   const timeSlots = generateTimeSlots();
   const canCheckout = selectedTime && !isTimePassed(selectedTime);
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
+    // Проверка на пустую корзину
+    if (items.length === 0) {
+      setError("Корзина пуста. Добавьте блюда из меню");
+      return;
+    }
     if (!selectedTime) {
       setError("Выберите время получения");
       return;
@@ -63,6 +68,33 @@ export default function Cart() {
     if (!isAuthenticated) {
       navigate("/profile");
       return;
+    }
+
+    // Создаём заказ
+    try {
+      const response = await fetch("/api/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items,
+          pickupTime: selectedTime,
+          totalPrice,
+        }),
+      });
+      
+      if (response.ok) {
+        // Очищаем корзину
+        items.forEach(item => removeItem(item.id));
+        setSelectedTime(null);
+        // Показываем сообщение об успехе
+        alert("Заказ успешно создан! Статус: Готовится");
+        navigate("/profile");
+      } else {
+        const data = await response.json();
+        setError(data.error || "Ошибка создания заказа");
+      }
+    } catch (e) {
+      setError("Ошибка соединения");
     }
   };
 
@@ -162,17 +194,15 @@ export default function Cart() {
               <div className="flex justify-between text-lg font-bold"><span>Итого:</span><span className="text-[#0066CC]">{totalPrice}₽</span></div>
             </div>
 
-            <a
-              href={PAYMENT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
               onClick={handleCheckout}
+              disabled={!canCheckout}
               className={`block w-full font-semibold py-4 px-6 rounded-xl text-center ${
-                canCheckout ? "bg-[#0066CC] hover:bg-[#0052A3] text-white" : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                canCheckout ? "bg-[#0066CC] hover:bg-[#0052A3] text-white cursor-pointer" : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             >
               Оплатить заказ
-            </a>
+            </button>
           </div>
         </div>
       </div>

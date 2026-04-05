@@ -7,7 +7,7 @@ import {
   ScrollRestoration,
 } from "react-router";
 import { useState, useEffect, type ReactNode } from "react";
-// import { Toaster } from "sonner";
+import { Toaster } from "sonner";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -46,7 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Компонент для рендеринга только на клиенте
+// Компонент для рендеринга только на клиенте (например, для Toaster)
 function ClientOnly({ children }: { children: () => ReactNode }) {
   const [mounted, setMounted] = useState(false);
   
@@ -65,7 +65,9 @@ export default function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        {/* <Toaster position="top-center" /> */}
+        <ClientOnly>
+          {() => <Toaster position="top-center" />}
+        </ClientOnly>
         <AppLayout>
           <Outlet />
         </AppLayout>

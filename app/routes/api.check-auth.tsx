@@ -1,5 +1,5 @@
 import { data } from "react-router";
-import { KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET } from "../constants/config";
+import { KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID, getKeycloakClientSecret } from "../constants/config";
 
 // Вспомогательная функция для парсинга куки
 function parseCookies(cookieHeader: string | null): Record<string, string> {
@@ -61,6 +61,8 @@ export async function loader({ request }: { request: Request }) {
     if (refreshToken) {
       try {
         const tokenUrl = `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token`;
+        const clientSecret = getKeycloakClientSecret();
+        
         const refreshResponse = await fetch(tokenUrl, {
           method: "POST",
           headers: {
@@ -69,7 +71,7 @@ export async function loader({ request }: { request: Request }) {
           body: new URLSearchParams({
             grant_type: "refresh_token",
             client_id: KEYCLOAK_CLIENT_ID,
-            client_secret: KEYCLOAK_CLIENT_SECRET,
+            client_secret: clientSecret,
             refresh_token: refreshToken,
           }),
         });
@@ -80,6 +82,10 @@ export async function loader({ request }: { request: Request }) {
           const newRefreshToken = tokens.refresh_token;
           const expiresIn = tokens.expires_in || 300;
 
+          // Secure только в production
+          const isProduction = process.env.NODE_ENV === "production";
+          const cookieOptions = `Path=/; HttpOnly; SameSite=Lax${isProduction ? "; Secure" : ""}`;
+          
           return data(
             {
               authenticated: true,
@@ -97,15 +103,16 @@ export async function loader({ request }: { request: Request }) {
             {
               headers: {
                 "Set-Cookie": [
-                  `access_token=${newAccessToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${expiresIn}`,
-                  `refresh_token=${newRefreshToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}`,
+                  `access_token=${newAccessToken}; ${cookieOptions}; Max-Age=${expiresIn}`,
+                  `refresh_token=${newRefreshToken}; ${cookieOptions}; Max-Age=${60 * 60 * 24 * 7}`,
                 ].join(", "),
               },
             }
           );
         }
       } catch (refreshError) {
-        console.error("Token refresh failed:", refreshError);
+        // Не раскрываем детали ошибки клиенту
+        console.error("Token refresh failed");
       }
     }
     

@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # Keycloak Identity Provider
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: sibsiu-keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: true
+    command: start-dev --import-realm
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/realms:/opt/keycloak/data/havip/import:ro
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e 'GET /health/ready HTTP/1.1\r\nhost: localhost\r\n\r\n' >&3;if [ $? -eq 0 ];then echo 'Healthcheck Successful';exit 0;else echo 'Healthcheck Failed';exit 1;fi;"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    networks:
+      - sibsiu-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: sibsiu-postgres
+    environment:
+      POSTGRES_DB: sibsiu_canteen
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sibsiu_canteen"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sibsiu-network
+
+  # Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sibsiu-app
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:1@postgres:5432/sibsiu_canteen?schema=public
+      SERVER_KEYCLOAK_CLIENT_SECRET: VCHfWLinO4Vx8hM2e4a8fVpflPuSButf
+      VITE_KEYCLOAK_URL: http://localhost:8080
+      VITE_KEYCLOAK_REALM: canteen
+      VITE_KEYCLOAK_CLIENT_ID: canteen-web
+      VITE_APP_URL: http://localhost:5173
+      VITE_PAYMENT_URL: https://pay.sibsiu.ru/
+    ports:
+      - "5173:5173"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - sibsiu-network
+
+volumes:
+  postgres_data:
+
+networks:
+  sibsiu-network:
+    driver: bridge

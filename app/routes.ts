@@ -12,5 +12,7 @@ export default [
   route("api/check-auth", "routes/api.check-auth.tsx"),
   route("api/logout", "routes/api.logout.tsx"),
   route("api/login", "routes/api.login.tsx"),
+  route("api/create-order", "routes/api.create-order.tsx"),
+  route("api/user-orders", "routes/api.user-orders.tsx"),
   route("*", "routes/.404.tsx"),
 ] satisfies RouteConfig;

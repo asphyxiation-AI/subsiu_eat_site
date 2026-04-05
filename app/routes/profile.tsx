@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { User, LogOut, ShoppingBag, Settings, CheckCircle, XCircle, Clock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -14,6 +14,30 @@ export function meta({}: Route.MetaArgs) {
 export default function Profile() {
   const { user, isAuthenticated, isLoading, logout, hasRole } = useAuth();
   const [activeTab, setActiveTab] = useState<"orders" | "settings">("orders");
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+
+  // Загружаем заказы при монтировании
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadOrders();
+    }
+  }, [isAuthenticated]);
+
+  const loadOrders = async () => {
+    setLoadingOrders(true);
+    try {
+      const res = await fetch("/api/user-orders");
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data.orders || []);
+      }
+    } catch (e) {
+      console.error("Failed to load orders:", e);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
 
   // Не авторизован
   if (!isLoading && !isAuthenticated) {
@@ -46,6 +70,14 @@ export default function Profile() {
   }
 
   const isAdmin = hasRole("admin");
+  
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST", credentials: "include" });
+    } finally {
+      logout();
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -79,7 +111,7 @@ export default function Profile() {
                 <Settings className="w-5 h-5" /> Админ-панель
               </Link>
             )}
-            <button onClick={logout} className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-xl">
+            <button onClick={handleLogout} className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-xl">
               <LogOut className="w-5 h-5" /> Выйти
             </button>
           </div>
@@ -96,15 +128,49 @@ export default function Profile() {
         </button>
       </div>
 
-      {/* Заказы (пустой список) */}
+      {/* Заказы */}
       {activeTab === "orders" && (
-        <div className="bg-white rounded-2xl shadow-md p-8 text-center">
-          <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">У вас пока нет заказов</h2>
-          <p className="text-gray-600 mb-4">Оформите первый заказ в нашей столовой!</p>
-          <Link to="/" className="inline-flex bg-[#0066CC] hover:bg-[#0052A3] text-white font-medium py-2 px-4 rounded-xl">
-            Перейти в меню
-          </Link>
+        <div>
+          {loadingOrders ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0066CC]"></div>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-md p-8 text-center">
+              <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h2 className="text-xl font-bold mb-2">У вас пока нет заказов</h2>
+              <p className="text-gray-600 mb-4">Оформите первый заказ в нашей столовой!</p>
+              <Link to="/" className="inline-flex bg-[#0066CC] hover:bg-[#0052A3] text-white font-medium py-2 px-4 rounded-xl">
+                Перейти в меню
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <div key={order.id} className="bg-white rounded-2xl shadow-md p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <span className="text-sm text-gray-500">Заказ #{order.orderNumber}</span>
+                      <p className="text-sm text-gray-600">{order.pickupTime ? new Date(order.pickupTime).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "Не указано"}</p>
+                    </div>
+                    {getStatusBadge(order.status)}
+                  </div>
+                  <div className="border-t pt-3 space-y-2">
+                    {order.orderItems?.map((item: any, idx: number) => (
+                      <div key={idx} className="flex justify-between text-sm">
+                        <span>{item.productName} x{item.quantity}</span>
+                        <span className="font-medium">{item.price * item.quantity}₽</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                    <span className="font-bold">Итого:</span>
+                    <span className="font-bold text-[#0066CC]">{order.totalPrice}₽</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
