@@ -5,6 +5,21 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
+  // Performance optimizations
+  build: {
+    // Target modern browsers for smaller output
+    target: 'esnext',
+    // Minify with esbuild  
+    minify: 'esbuild',
+    // Generate source maps for production (optional - disable for smaller builds)
+    sourcemap: false,
+    // Chunk size warning limit
+    chunkSizeWarningLimit: 500,
+  },
+  // Optimize dependencies
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router'],
+  },
   server: {
     port: 5173,
     strictPort: true,
