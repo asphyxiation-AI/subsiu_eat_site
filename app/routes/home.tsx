@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router";
 import { Clock, Flame, Wallet, Plus, Check, Utensils, Sparkles, ChevronDown, Star, Users, Coffee } from "lucide-react";
 import type { Route } from "./+types/home";
 import { prisma } from "../lib/db.server";
 import { useCart } from "../context/CartContext";
+import { getCurrentCycleDay } from "../lib/timezone";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -12,19 +14,6 @@ export function meta({}: Route.MetaArgs) {
 }
 
 const daysOfWeekNames = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"];
-
-function getCurrentCycleDay(): { dayOfWeek: number; weekType: number } {
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    return { dayOfWeek: 5, weekType: 1 };
-  }
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const pastDays = (now.getTime() - startOfYear.getTime()) / 86400000;
-  const weekNumber = Math.ceil((pastDays + startOfYear.getDay() + 1) / 7);
-  const weekType = weekNumber % 2 === 0 ? 2 : 1;
-  return { dayOfWeek, weekType };
-}
 
 export async function loader() {
   let settings = await prisma.menuSettings.findFirst();
@@ -159,8 +148,17 @@ function FoodCard({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { menuItems, dayName, todayDish } = loaderData;
   const { addItem } = useCart();
+  const [searchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState("Наборы");
   const [isLoaded, setIsLoaded] = useState(false);
+  
+  // Читаем категорию из URL при загрузке
+  useEffect(() => {
+    const categoryParam = searchParams.get("category");
+    if (categoryParam && categories.includes(categoryParam)) {
+      setActiveCategory(categoryParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     setIsLoaded(true);

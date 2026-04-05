@@ -15,10 +15,18 @@ export default defineConfig({
     sourcemap: false,
     // Chunk size warning limit
     chunkSizeWarningLimit: 500,
+    // CSS code splitting
+    cssCodeSplit: true,
+    // Minify CSS
+    cssMinify: true,
   },
   // Optimize dependencies
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router'],
+  },
+  // CSS optimization
+  css: {
+    devSourcemap: false,
   },
   server: {
     port: 5173,

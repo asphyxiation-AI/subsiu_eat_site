@@ -17,6 +17,8 @@ model Category {
   products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@index([name])
 }
 
 // Модель блюда
@@ -29,21 +31,27 @@ model Product {
   category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   image       String
   isAvailable Boolean     @default(true)
-  isVisible   Boolean     @default(true)  // Скрыть на сегодня (кнопка "Не добавлять")
-  dayOfWeek   Int         // 1-14 для двухнедельного цикла
-  weekType    Int         // 1 или 2 (какая неделя в цикле)
-  calories    Int?        // КБЖУ: калории
-  weight      Int?        // КБЖУ: вес в граммах
+  isVisible   Boolean     @default(true)
+  dayOfWeek   Int
+  weekType    Int
+  calories    Int?
+  weight      Int?
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+
+  // Индексы для часто используемых запросов
+  @@index([categoryId])
+  @@index([isVisible, isAvailable])
+  @@index([dayOfWeek, weekType])
+  @@index([name])
 }
 
-// Настройки меню (хранит опубликованную неделю)
+// Настройки меню
 model MenuSettings {
-  id              String   @id @default(uuid())
-  publishedWeek   Int      @default(1)  // Какая неделя опубликована (1 или 2)
-  updatedAt       DateTime @updatedAt
+  id            String   @id @default(uuid())
+  publishedWeek Int      @default(1)
+  updatedAt     DateTime @updatedAt
 }
 
 // Статусы заказа
@@ -63,19 +71,28 @@ model Order {
   totalPrice    Decimal     @db.Decimal(10, 2)
   pickupTime    DateTime
   status        OrderStatus @default(PENDING)
-  userSub       String?     // ID из Keycloak
-  cancelReason  String?     // Причина отмены заказа
+  userSub       String?
+  cancelReason  String?
   orderItems    OrderItem[]
+
+  // Индексы для фильтрации и сортировки
+  @@index([userSub])
+  @@index([status])
+  @@index([createdAt])
+  @@index([pickupTime])
 }
 
-// Связующая таблица заказов и продуктов
+// Связующая таблица
 model OrderItem {
   id           String  @id @default(uuid())
   quantity     Int
-  price        Decimal @db.Decimal(10, 2) // Цена на момент покупки
-  productName  String  // Название блюда на момент заказа
+  price        Decimal @db.Decimal(10, 2)
+  productName  String
   orderId      String
   order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId    String
   product      Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
 }

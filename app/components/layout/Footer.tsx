@@ -30,28 +30,33 @@ export function Footer() {
             <h3 className="text-lg font-bold mb-4">Меню</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/#menu" className="text-white/80 hover:text-white transition-colors hover:underline">
+                <Link to="/?category=Наборы#menu" className="text-white/80 hover:text-white transition-colors hover:underline">
                   Наборы
                 </Link>
               </li>
               <li>
-                <Link to="/#menu" className="text-white/80 hover:text-white transition-colors hover:underline">
+                <Link to="/?category=Первые блюда#menu" className="text-white/80 hover:text-white transition-colors hover:underline">
                   Первые блюда
                 </Link>
               </li>
               <li>
-                <Link to="/#menu" className="text-white/80 hover:text-white transition-colors hover:underline">
+                <Link to="/?category=Вторые блюда#menu" className="text-white/80 hover:text-white transition-colors hover:underline">
                   Вторые блюда
                 </Link>
               </li>
               <li>
-                <Link to="/#menu" className="text-white/80 hover:text-white transition-colors hover:underline">
+                <Link to="/?category=Салаты#menu" className="text-white/80 hover:text-white transition-colors hover:underline">
                   Салаты
                 </Link>
               </li>
               <li>
-                <Link to="/#menu" className="text-white/80 hover:text-white transition-colors hover:underline">
+                <Link to="/?category=Напитки#menu" className="text-white/80 hover:text-white transition-colors hover:underline">
                   Напитки
+                </Link>
+              </li>
+              <li>
+                <Link to="/?category=Выпечка#menu" className="text-white/80 hover:text-white transition-colors hover:underline">
+                  Выпечка
                 </Link>
               </li>
             </ul>

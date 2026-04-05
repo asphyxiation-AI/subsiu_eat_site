@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { Minus, Plus, Trash2, ShoppingCart, ArrowLeft, Clock, CheckCircle } from "lucide-react";
 import { useCart } from "../context/CartContext";
@@ -42,11 +42,16 @@ function isTimePassed(time: string): boolean {
 }
 
 export default function Cart() {
-  const { items, removeItem, updateQuantity, totalPrice } = useCart();
+  const { items, removeItem, updateQuantity, totalPrice, totalItems } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [error, setError] = useState("");
+
+  // Прокрутка страницы наверх при загрузке
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const timeSlots = generateTimeSlots();
   const canCheckout = selectedTime && !isTimePassed(selectedTime);
@@ -189,7 +194,7 @@ export default function Cart() {
 
             {/* Итого */}
             <div className="border-t border-gray-200 pt-4 mb-6">
-              <div className="flex justify-between mb-2"><span className="text-gray-600">Товаров:</span><span className="font-medium">{items.length}</span></div>
+            <div className="flex justify-between mb-2"><span className="text-gray-600">Товаров:</span><span className="font-medium">{totalItems}</span></div>
               <div className="flex justify-between mb-2"><span className="text-gray-600">На сумму:</span><span className="font-medium">{totalPrice}₽</span></div>
               <div className="flex justify-between text-lg font-bold"><span>Итого:</span><span className="text-[#0066CC]">{totalPrice}₽</span></div>
             </div>

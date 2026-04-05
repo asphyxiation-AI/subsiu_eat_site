@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { prisma } from "../lib/db.server";
+import { getCurrentCycleDay } from "../lib/timezone";
 import type { Route } from "./+types/admin.menu";
 
 export function meta({}: Route.MetaArgs) {
@@ -53,17 +54,6 @@ const weekTypes = [
 ];
 
 const daysOfWeek = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница"];
-
-function getCurrentCycleDay(): { dayOfWeek: number; weekType: number } {
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  if (dayOfWeek === 0 || dayOfWeek === 6) return { dayOfWeek: 5, weekType: 1 };
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const pastDays = (now.getTime() - startOfYear.getTime()) / 86400000;
-  const weekNumber = Math.ceil((pastDays + startOfYear.getDay() + 1) / 7);
-  const weekType = weekNumber % 2 === 0 ? 2 : 1;
-  return { dayOfWeek, weekType };
-}
 
 async function requireAdminRole(request: Request) {
   const cookieHeader = request.headers.get("Cookie");

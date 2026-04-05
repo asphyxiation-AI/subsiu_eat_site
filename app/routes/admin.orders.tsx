@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { prisma } from "../lib/db.server";
+import { formatDate, formatTime, getCurrentCycleDay } from "../lib/timezone";
 import type { Route } from "./+types/admin.orders";
 
 export function meta({}: Route.MetaArgs) {
@@ -51,7 +52,7 @@ export async function loader() {
       id: order.id,
       createdAt: order.createdAt,
       totalPrice: Number(order.totalPrice),
-      pickupTime: order.pickupTime ? order.pickupTime.toISOString().slice(11, 16) : "",
+      pickupTime: order.pickupTime ? formatTime(order.pickupTime) : "",
       status: order.status as OrderStatus,
       userName: order.userSub || "Гость",
       userGroup: "",
@@ -185,8 +186,6 @@ export default function AdminOrders({ loaderData }: Route.ComponentProps) {
     fetcher.submit({ orderId, status: newStatus }, { method: "post" });
   };
 
-  const formatDate = (date: Date) => new Date(date).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
-  const formatTime = (date: Date) => new Date(date).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
 
   return (
     <div className="container mx-auto px-4 py-8">

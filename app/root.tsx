@@ -17,15 +17,20 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-  },
+  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+  { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" },
+  { rel: "icon", href: "/favicon.ico" },
+  { rel: "apple-touch-icon", href: "/logo_sibsiu.png" },
+];
+
+// SEO: мета-теги по умолчанию
+export const meta: Route.MetaFunction = () => [
+  { title: "Столовая СибГИУ - Онлайн заказ еды" },
+  { name: "description", content: "Система онлайн-заказов для столовой СибГИУ. Заказывайте любимые блюда заранее и экономьте время." },
+  { name: "keywords", content: "столовая, сибгиу, еда, заказ, меню, новокузнецк" },
+  { property: "og:title", content: "Столовая СибГИУ" },
+  { property: "og:description", content: "Система онлайн-заказов для столовой СибГИУ" },
+  { property: "og:type", content: "website" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

@@ -43,6 +43,72 @@ services:
     networks:
       - sibsiu-network
 
+  # Prometheus - метрики и мониторинг
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sibsiu-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/rules:/etc/prometheus/rules
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - sibsiu-network
+    restart: unless-stopped
+
+  # Grafana - визуализация метрик
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sibsiu-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - sibsiu-network
+    restart: unless-stopped
+
+  # Loki - логирование
+  loki:
+    image: grafana/loki:latest
+    container_name: sibsiu-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - sibsiu-network
+    restart: unless-stopped
+
+  # Promtail - агент для отправки логов в Loki
+  promtail:
+    image: grafana/promtail:latest
+    container_name: sibsiu-promtail
+    volumes:
+      - ./promtail/promtail-config.yml:/etc/promtail/config.yml
+      - /var/log:/var/log
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - sibsiu-network
+    restart: unless-stopped
+
   # Application
   app:
     build:
@@ -67,9 +133,17 @@ services:
         condition: service_healthy
     networks:
       - sibsiu-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   postgres_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
 
 networks:
   sibsiu-network:
