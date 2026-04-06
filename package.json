@@ -3,15 +3,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build",
+    "build": "prisma generate && react-router build",
     "dev": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js --port 5173",
+    "start": "react-router-serve ./build/server/index.js --host 0.0.0.0 --port ${PORT:-5173}",
     "typecheck": "react-router typegen && tsc",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@prisma/client": "^7.4.1",
     "@react-router/node": "^7.13.0",
     "@react-router/serve": "^7.13.0",
     "isbot": "^5.1.31",
@@ -24,7 +25,6 @@
   },
   "devDependencies": {
     "@prisma/adapter-pg": "^7.4.1",
-    "@prisma/client": "^7.4.1",
     "@react-router/dev": "^7.13.0",
     "@tailwindcss/vite": "^4.1.13",
     "@testing-library/jest-dom": "^6.9.1",
