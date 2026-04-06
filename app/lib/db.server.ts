@@ -1,4 +1,10 @@
-import "dotenv/config";
+// Загружаем dotenv только если файл .env существует (для локальной разработки)
+// В production (Railway) переменные окружения передаются напрямую
+try {
+  await import("dotenv/config");
+} catch {
+  // .env файл не найден, используем переменные окружения из системы
+}
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
