@@ -2,7 +2,7 @@
  * API route для создания заказа с валидацией
  */
 
-import { prisma } from "../lib/db.server";
+
 
 // Вспомогательная функция для парсинга куки
 function parseCookies(cookieHeader: string | null): Record<string, string> {
@@ -55,6 +55,8 @@ function isValidOrderItem(item: any): boolean {
 }
 
 export async function action({ request }: { request: Request }) {
+  const { prisma } = await import("../lib/db.server");
+  
   if (request.method !== "POST") {
     return Response.json({ error: "Method not allowed" }, { status: 405 });
   }
@@ -78,7 +80,7 @@ export async function action({ request }: { request: Request }) {
     }
 
     const body = await request.json();
-    const { items, pickupTime, totalPrice, timeSlotId } = body;
+    const { items, totalPrice, timeSlotId } = body;
 
     // Валидация items
     if (!items || !Array.isArray(items) || items.length === 0) {
