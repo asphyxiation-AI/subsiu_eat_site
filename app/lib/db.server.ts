@@ -1,4 +1,10 @@
-import "dotenv/config";
+// Загружаем dotenv только в development режиме (если .env существует)
+if (process.env.NODE_ENV !== "production") {
+  import("dotenv/config").catch(() => {
+    // .env файл не найден или ошибка парсинга - продолжаем без него
+  });
+}
+
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";

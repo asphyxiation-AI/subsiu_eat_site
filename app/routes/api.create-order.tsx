@@ -78,7 +78,7 @@ export async function action({ request }: { request: Request }) {
     }
 
     const body = await request.json();
-    const { items, pickupTime, totalPrice } = body;
+    const { items, pickupTime, totalPrice, timeSlotId } = body;
 
     // Валидация items
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -96,13 +96,49 @@ export async function action({ request }: { request: Request }) {
       }
     }
 
-    // Валидация pickupTime
-    if (!pickupTime || typeof pickupTime !== "string") {
-      return Response.json({ error: "Выберите время получения" }, { status: 400 });
+    // Валидация временного слота
+    if (!timeSlotId || typeof timeSlotId !== "string") {
+      return Response.json({ error: "Выберите временной интервал" }, { status: 400 });
     }
 
-    if (!isValidPickupTime(pickupTime)) {
-      return Response.json({ error: "Неверное время получения (08:00-18:00)" }, { status: 400 });
+    // Проверка слота на сервере
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const timeSlot = await prisma.timeSlot.findUnique({
+      where: { id: timeSlotId },
+      include: {
+        _count: {
+          select: {
+            orders: {
+              where: {
+                scheduledDate: {
+                  gte: today,
+                  lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+                },
+                status: { not: 'CANCELLED' }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!timeSlot || !timeSlot.isEnabled) {
+      return Response.json({ error: "Выбранный слот больше не доступен" }, { status: 400 });
+    }
+
+    if (timeSlot._count.orders >= timeSlot.capacity) {
+      return Response.json({ error: "Извините, этот интервал только что заполнился. Выберите другое время." }, { status: 409 });
+    }
+
+    // Проверка что до начала слота больше 15 минут
+    const [hours, minutes] = timeSlot.startTime.split(':').map(Number);
+    const slotStartTime = new Date();
+    slotStartTime.setHours(hours, minutes, 0, 0);
+
+    if (slotStartTime.getTime() - Date.now() < 15 * 60 * 1000) {
+      return Response.json({ error: "Запись на этот слот уже закрыта" }, { status: 400 });
     }
 
     // Валидация totalPrice
@@ -115,7 +151,9 @@ export async function action({ request }: { request: Request }) {
       data: {
         userSub,
         totalPrice,
-        pickupTime: new Date(`1970-01-01T${pickupTime}:00`),
+        pickupTime: new Date(`1970-01-01T${timeSlot.startTime}:00`),
+        timeSlotId: timeSlot.id,
+        scheduledDate: today,
         status: "PREPARING",
         orderItems: {
           create: items.map((item: any) => ({

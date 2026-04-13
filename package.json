@@ -12,20 +12,20 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "@react-router/node": "^7.13.0",
-    "@react-router/serve": "^7.13.0",
+    "@react-router/node": "^7.14.0",
+    "@react-router/serve": "^7.14.0",
     "isbot": "^5.1.31",
     "lucide-react": "^0.575.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router": "^7.13.0",
+    "react-router": "^7.14.0",
     "sonner": "^2.0.7",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@prisma/adapter-pg": "^7.4.1",
-    "@prisma/client": "^7.4.1",
-    "@react-router/dev": "^7.13.0",
+    "@prisma/client": "^7.7.0",
+    "@react-router/dev": "^7.14.0",
     "@tailwindcss/vite": "^4.1.13",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

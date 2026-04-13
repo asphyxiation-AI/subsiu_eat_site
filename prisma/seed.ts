@@ -155,12 +155,41 @@ async function main() {
   }
   
   console.log(`Добавлено ${products.length} блюд в базу данных`);
+
+  // Создаем стандартные временные слоты
+  const timeSlots = [
+    { label: "08:30", startTime: "08:30", endTime: "09:00", capacity: 30 },
+    { label: "09:00", startTime: "09:00", endTime: "09:30", capacity: 30 },
+    { label: "09:30", startTime: "09:30", endTime: "10:00", capacity: 30 },
+    { label: "10:00", startTime: "10:00", endTime: "10:30", capacity: 40 },
+    { label: "10:30", startTime: "10:30", endTime: "11:00", capacity: 40 },
+    { label: "11:00", startTime: "11:00", endTime: "11:30", capacity: 40 },
+    { label: "11:30", startTime: "11:30", endTime: "12:00", capacity: 50 },
+    { label: "12:00", startTime: "12:00", endTime: "12:30", capacity: 60 },
+    { label: "12:30", startTime: "12:30", endTime: "13:00", capacity: 60 },
+    { label: "13:00", startTime: "13:00", endTime: "13:30", capacity: 50 },
+    { label: "13:30", startTime: "13:30", endTime: "14:00", capacity: 50 },
+    { label: "14:00", startTime: "14:00", endTime: "14:30", capacity: 40 },
+    { label: "14:30", startTime: "14:30", endTime: "15:00", capacity: 40 },
+    { label: "15:00", startTime: "15:00", endTime: "15:30", capacity: 30 },
+    { label: "15:30", startTime: "15:30", endTime: "16:00", capacity: 30 },
+    { label: "16:00", startTime: "16:00", endTime: "16:30", capacity: 30 },
+  ];
+
+  await prisma.timeSlot.deleteMany();
+
+  for (const slot of timeSlots) {
+    await prisma.timeSlot.create({ data: slot });
+    console.log(`Создан временной слот: ${slot.label} (${slot.startTime}-${slot.endTime})`);
+  }
   
   // Проверяем что категории созданы
   const productCount = await prisma.product.count();
   const categoryCount = await prisma.category.count();
+  const slotCount = await prisma.timeSlot.count();
   console.log(`Всего блюд в базе: ${productCount}`);
   console.log(`Всего категорий в базе: ${categoryCount}`);
+  console.log(`Всего временных слотов: ${slotCount}`);
 }
 
 main()

@@ -1,51 +1,60 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useLoaderData } from "react-router";
 import { Minus, Plus, Trash2, ShoppingCart, ArrowLeft, Clock, CheckCircle } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { ORDER_START_TIME, ORDER_END_TIME, SKIP_TIME_CHECK, TIMEZONE } from "../constants/config";
-import type { Route } from "./+types/cart";
+import TimeSlotPicker from "../components/TimeSlotPicker";
 
-export function meta({}: Route.MetaArgs) {
+export async function loader() {
+  const { prisma } = await import("../lib/db.server");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const slots = await prisma.timeSlot.findMany({
+    where: { isEnabled: true },
+    orderBy: { startTime: 'asc' },
+    include: {
+      _count: {
+        select: {
+          orders: {
+            where: {
+              scheduledDate: {
+                gte: today,
+                lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
+              },
+              status: { not: 'CANCELLED' }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  return {
+    slots: slots.map(slot => ({
+      id: slot.id,
+      label: slot.label,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      capacity: slot.capacity,
+      booked: slot._count.orders
+    }))
+  };
+}
+
+export function meta() {
   return [
     { title: "Корзина - Столовая СибГИУ" },
     { name: "description", content: "Оформите заказ в столовой СибГИУ" },
   ];
 }
 
-// Генерируем временные слоты
-function generateTimeSlots() {
-  const slots = [];
-  const [startHour, startMinute] = ORDER_START_TIME.split(":").map(Number);
-  const [endHour, endMinute] = ORDER_END_TIME.split(":").map(Number);
-  
-  let currentHour = startHour;
-  let currentMinute = startMinute;
-  
-  while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
-    slots.push(`${currentHour.toString().padStart(2, "0")}:${currentMinute.toString().padStart(2, "0")}`);
-    currentMinute += 30;
-    if (currentMinute >= 60) {
-      currentHour += 1;
-      currentMinute = 0;
-    }
-  }
-  return slots;
-}
-
-// Проверка прошедшего времени
-function isTimePassed(time: string): boolean {
-  if (SKIP_TIME_CHECK) return false;
-  const now = new Date();
-  const formatter = new Intl.DateTimeFormat("ru-RU", { timeZone: TIMEZONE, hour: "2-digit", minute: "2-digit", hour12: false });
-  return time <= formatter.format(now);
-}
-
 export default function Cart() {
+  const { slots } = useLoaderData<typeof loader>();
   const { items, removeItem, updateQuantity, totalPrice, totalItems } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   // Прокрутка страницы наверх при загрузке
@@ -53,8 +62,7 @@ export default function Cart() {
     window.scrollTo(0, 0);
   }, []);
 
-  const timeSlots = generateTimeSlots();
-  const canCheckout = selectedTime && !isTimePassed(selectedTime);
+  const canCheckout = selectedSlotId !== null;
 
   const handleCheckout = async () => {
     // Проверка на пустую корзину
@@ -62,12 +70,8 @@ export default function Cart() {
       setError("Корзина пуста. Добавьте блюда из меню");
       return;
     }
-    if (!selectedTime) {
+    if (!selectedSlotId) {
       setError("Выберите время получения");
-      return;
-    }
-    if (isTimePassed(selectedTime)) {
-      setError("Выбранное время уже прошло");
       return;
     }
     if (!isAuthenticated) {
@@ -82,7 +86,7 @@ export default function Cart() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items,
-          pickupTime: selectedTime,
+          timeSlotId: selectedSlotId,
           totalPrice,
         }),
       });
@@ -90,7 +94,7 @@ export default function Cart() {
       if (response.ok) {
         // Очищаем корзину
         items.forEach(item => removeItem(item.id));
-        setSelectedTime(null);
+        setSelectedSlotId(null);
         // Показываем сообщение об успехе
         alert("Заказ успешно создан! Статус: Готовится");
         navigate("/profile");
@@ -166,29 +170,15 @@ export default function Cart() {
             
             {/* Выбор времени */}
             <div className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Clock className="w-5 h-5 text-[#0066CC]" />
-                <label className="font-medium text-gray-700">Выберите время получения</label>
-              </div>
-              <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-                {timeSlots.map((time) => {
-                  const passed = isTimePassed(time);
-                  return (
-                    <button
-                      key={time}
-                      disabled={passed}
-                      onClick={() => { setSelectedTime(time); setError(""); }}
-                      className={`py-2 rounded-lg text-sm font-medium ${
-                        selectedTime === time ? "bg-[#0066CC] text-white" :
-                        passed ? "bg-gray-100 text-gray-300 line-through" :
-                        "bg-gray-50 text-gray-700 hover:bg-orange-500 hover:text-white"
-                      }`}
-                    >
-                      {time}
-                    </button>
-                  );
-                })}
-              </div>
+              <TimeSlotPicker
+                slots={slots}
+                selectedSlotId={selectedSlotId}
+                onSelect={(slotId) => {
+                  setSelectedSlotId(slotId);
+                  setError("");
+                }}
+              />
+
               {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
             </div>
 

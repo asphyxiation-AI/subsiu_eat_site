@@ -8,6 +8,8 @@ export default [
   route("auth/callback", "routes/auth-callback.tsx"),
   route("admin", "routes/admin._index.tsx"),
   route("admin/orders", "routes/admin.orders.tsx"),
+  route("admin/orders-screen", "routes/admin.orders-screen.tsx"),
+  route("admin/time-slots", "routes/admin.time-slots.tsx"),
   route("admin/menu", "routes/admin.menu.tsx"),
   route("api/check-auth", "routes/api.check-auth.tsx"),
   route("api/logout", "routes/api.logout.tsx"),
