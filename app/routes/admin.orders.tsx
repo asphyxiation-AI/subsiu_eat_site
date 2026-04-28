@@ -116,11 +116,9 @@ function getStatusText(status: OrderStatus): string {
 
 const statusFilters = [
   { value: "ALL", label: "Все" },
-  { value: "PENDING", label: "Принят" },
   { value: "PREPARING", label: "Готовится" },
   { value: "READY", label: "Готов" },
   { value: "COMPLETED", label: "Выдан" },
-  { value: "CANCELLED", label: "Отменён" },
 ];
 
 export default function AdminOrders({ loaderData }: Route.ComponentProps) {
@@ -231,17 +229,24 @@ export default function AdminOrders({ loaderData }: Route.ComponentProps) {
         <div className="space-y-4">
           {filteredOrders.map((order) => (
             <div key={order.id} className="bg-white rounded-2xl shadow-md p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <span className="text-2xl font-bold text-gray-900">#{order.id.slice(-6)}</span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(order.status)}`}>{getStatusText(order.status)}</span>
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 whitespace-nowrap">#{order.id.slice(-6)}</span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-semibold ${getStatusColor(order.status)} whitespace-nowrap`}>
+                    {getStatusText(order.status)}
+                    {order.pickupTime && (
+                      <span className="ml-1 font-normal opacity-90">{order.pickupTime}</span>
+                    )}
+                  </span>
                 </div>
-                <div className="text-gray-500 text-sm">{formatDate(order.createdAt)} в {formatTime(order.createdAt)}</div>
+                <div className="text-gray-500 text-xs sm:text-sm">{formatDate(order.createdAt)} {formatTime(order.createdAt)}</div>
               </div>
 
-              <div className="flex items-center gap-6 mb-4 text-gray-600">
-                <div className="flex items-center gap-2"><User className="w-4 h-4" /><span>{order.userName}</span></div>
-                {order.pickupTime && (<div className="flex items-center gap-2"><Clock className="w-4 h-4" /><span className="font-semibold text-sib-blue">{order.pickupTime}</span></div>)}
+              <div className="flex items-center gap-4 mb-4 text-gray-600 flex-wrap">
+                <div className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /><span className="text-sm">{order.userName}</span></div>
+                {order.pickupTime && order.status !== "READY" && (
+                  <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /><span className="text-sm font-semibold text-sib-blue">{order.pickupTime}</span></div>
+                )}
               </div>
 
               <div className="bg-gray-50 rounded-xl p-4 mb-4">

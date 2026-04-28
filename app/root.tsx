@@ -14,6 +14,8 @@ import "./app.css";
 import { Layout as AppLayout } from "./components/layout/Layout";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ConfirmProvider } from "./components/ui/ConfirmModal";
+
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -35,14 +37,14 @@ export const meta: Route.MetaFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -66,16 +68,48 @@ function ClientOnly({ children }: { children: () => ReactNode }) {
   return <>{children()}</>;
 }
 
+import { useLocation } from "react-router";
+
 export default function App() {
+  const location = useLocation();
+  
+  useEffect(() => {
+    // При переходе между страницами всегда скроллим вверх
+    window.scrollTo({ 
+      top: 0, 
+      behavior: 'instant' 
+    });
+  }, [location.pathname]);
+
   return (
     <AuthProvider>
       <CartProvider>
-        <ClientOnly>
-          {() => <Toaster position="top-center" />}
-        </ClientOnly>
-        <AppLayout>
-          <Outlet />
-        </AppLayout>
+        <ConfirmProvider>
+          <Toaster 
+            position="top-right" 
+            offset={90} 
+            closeButton
+            duration={2200}
+            toastOptions={{
+              className: '!bg-white !rounded-2xl !shadow-xl !border !border-gray-100 !p-4 !pr-12 !min-w-[320px]',
+              classNames: {
+                title: '!text-gray-900 !font-bold !text-base',
+                description: '!text-gray-600 !text-sm',
+                closeButton: '!absolute !top-3 !right-3 !bg-gray-100 !hover:bg-gray-200 !text-gray-500 !rounded-xl !w-7 !h-7 !flex !items-center !justify-center',
+                success: '!border-l-4 !border-l-emerald-500',
+                error: '!border-l-4 !border-l-red-500',
+                warning: '!border-l-4 !border-l-amber-500',
+                info: '!border-l-4 !border-l-blue-500',
+              },
+              style: {
+                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.12)',
+              }
+            }}
+          />
+          <AppLayout>
+            <Outlet />
+          </AppLayout>
+        </ConfirmProvider>
       </CartProvider>
     </AuthProvider>
   );

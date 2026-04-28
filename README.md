@@ -10,9 +10,6 @@
 - [Технологии](#-технологии)
 - [Требования](#-требования)
 - [Установка и запуск](#-установка-и-запуск)
-- [Docker](#docker)
-- [Тестирование](#-тестирование)
-- [Мониторинг](#-мониторинг)
 - [Настройка Keycloak](#-настройка-keycloak)
 - [Структура проекта](#-структура-проекта)
 - [API Endpoints](#-api-endpoints)
@@ -37,38 +34,24 @@
 
 ## 💻 Технологии
 
-### Основной стек
-
 | Технология | Назначение |
 |------------|------------|
 | React Router v7 | Основной фреймворк (Framework Mode) |
-| React 19 | UI библиотека |
 | PostgreSQL 17 | Реляционная база данных |
-| Prisma 7 | ORM для работы с БД |
-| Keycloak 26 | SSO Авторизация и безопасность |
-| Tailwind CSS 4 | Стилизация |
-| TypeScript 5 | Строгая типизация |
-| Vite 7 | Сборщик проекта |
-
-### Инфраструктура и инструменты
-
-| Технология | Назначение |
-|------------|------------|
-| Docker | Контейнеризация |
-| Prometheus | Метрики и мониторинг |
-| Grafana | Визуализация метрик |
-| Loki | Логирование |
-| Jest | Тестирование |
-| Zod | Валидация данных |
+| Prisma | ORM для работы с БД |
+| Keycloak | SSO Авторизация и безопасность |
+| Tailwind CSS | Стилизация и адаптивный дизайн |
+| TypeScript | Строгая типизация кода |
+| Vite | Сборщик проекта |
 
 ---
 
 ## ✅ Требования
 
-- **Node.js** 18+ (LTS)
+- **Node.js** 18+ 
 - **PostgreSQL** 15+
-- **Docker** и **Docker Compose**
-- **npm** 9+
+- **Keycloak** 24+ (для SSO авторизации)
+- **npm** или **yarn**
 
 ---
 
@@ -89,7 +72,7 @@ npm install
 
 ### 3. Настройка переменных окружения
 
-Создайте файл `.env`:
+Создайте файл `.env` на основе переменных в проекте:
 
 ```env
 # Database connection
@@ -97,7 +80,7 @@ DATABASE_URL="postgresql://postgres:1@localhost:5432/sibsiu_canteen?schema=publi
 
 # === Keycloak ===
 VITE_KEYCLOAK_URL=http://localhost:8080
-VITE_KEYCLOAK_REALM=canteen
+VITE_KEYCLOAK_REALM=my-app
 VITE_KEYCLOAK_CLIENT_ID=canteen-web
 KEYCLOAK_CLIENT_SECRET=VCHfWLinO4Vx8hM2e4a8fVpflPuSButf
 
@@ -118,7 +101,10 @@ NODE_ENV=development
 npx prisma generate
 
 # Применение миграций
-npx prisma db push
+npx prisma migrate deploy
+
+# (Опционально) Заполнение БД начальными данными
+npx prisma db seed
 ```
 
 ### 5. Запуск приложения
@@ -127,88 +113,17 @@ npx prisma db push
 ```bash
 npm run dev
 ```
+Приложение будет доступно по адресу: http://localhost:5173
 
 #### Продакшн режим:
 ```bash
+# Сборка
 npm run build
+
+# Запуск
 npm run start
 ```
-
----
-
-## 🐳 Docker
-
-Полная инфраструктура с мониторингом запускается одной командой:
-
-```bash
-# Запуск всех сервисов
-docker-compose up -d
-
-# Остановка
-docker-compose down
-```
-
-### Доступные сервисы
-
-| Сервис | URL | Описание |
-|--------|-----|----------|
-| Приложение | http://localhost:5173 | Основное веб-приложение |
-| Keycloak | http://localhost:8080 | SSO авторизация |
-| PostgreSQL | localhost:5432 | База данных |
-| Prometheus | http://localhost:9090 | Метрики |
-| Grafana | http://localhost:3000 | Дашборды (admin/admin) |
-| Loki | http://localhost:3100 | Логи |
-
----
-
-## 🧪 Тестирование
-
-### Запуск тестов
-
-```bash
-# Все тесты
-npm test
-
-# В режиме watch
-npm run test:watch
-
-# С покрытием
-npm run test:coverage
-```
-
-### Структура тестов
-
-```
-tests/
-├── setup.ts                 # Моки и настройки
-└── api.create-order.test.ts # Тесты валидации
-```
-
----
-
-## 📊 Мониторинг
-
-### Grafana Dashboard
-
-После запуска Docker доступен дашборд "SibSIU Canteen Overview" с панелями:
-- HTTP Requests Rate
-- Response Time (p95)
-- Success Rate
-- Recent Errors (логи)
-
-### Метрики Prometheus
-
-Мониторинг включает:
-- Метрики Keycloak
-- Метрики приложения
-- Системные метрики (при наличии node-exporter)
-
-### Логирование
-
-Loki собирает логи из:
-- Docker контейнеров
-- Приложения
-- Системы
+Приложение будет доступно по адресу: http://localhost:5173
 
 ---
 
@@ -217,28 +132,52 @@ Loki собирает логи из:
 ### Быстрая настройка (обязательно!)
 
 1. **Откройте Keycloak Admin Console**
-   - Адрес: `http://localhost:8080`
-   - Логин: `admin` / Пароль: `admin`
+   - Адрес: `http://localhost:8080` (или ваш Keycloak URL)
+   - Логин: `admin` / Пароль: `admin` (по умолчанию)
 
 2. **Создайте или выберите Realm**
-   - Имя: `canteen` (должно совпадать с `VITE_KEYCLOAK_REALM`)
+   - Имя: `my-app` (должно совпадать с `VITE_KEYCLOAK_REALM` в .env)
 
 3. **Создайте Client**
-   - **Client ID**: `canteen-web`
-   - **Client Protocol**: `openid-connect`
-   - **Access Type**: `confidential`
-   - **Standard Flow Enabled**: `OFF`
-   - **Direct Access Grants Enabled**: `ON`
-
+   - Перейдите в **Clients** → **Create client**
+   - Заполните:
+     - **Client ID**: `canteen-web` (совпадает с `VITE_KEYCLOAK_CLIENT_ID`)
+     - **Client Protocol**: `openid-connect`
+     - **Access Type**: `confidential` (для ROPC авторизации)
+     - **Standard Flow Enabled**: `OFF`
+     - **Direct Access Grants Enabled**: `ON`
+   
 4. **Получите Client Secret**
-   - Вкладка **Credentials** → скопируйте Secret
+   - Откройте вкладку **Credentials**
+   - Скопируйте значение **Secret**
    - Вставьте в `.env` как `KEYCLOAK_CLIENT_SECRET`
 
-5. **Включите регистрацию**
-   - **Realm Settings** → **Login** → User registration: `ON`
+5. **Включите регистрацию пользователей**
+   - **Realm Settings** → **Login**
+   - Включите **User registration**: `ON`
 
-6. **Создайте роль admin**
-   - **Realm roles** → **Create role** → `admin`
+6. **Создайте тестового пользователя**
+   - **Users** → **Add user**
+   - Заполните:
+     - **Username**: `student`
+     - **Email**: `student@sibgiu.ru`
+     - **First Name**: `Тест`
+     - **Last Name**: `Студент`
+   - На вкладке **Credentials** задайте пароль
+   - (Опционально) На вкладке **Role Mappings** добавьте роль `admin` для доступа к админ-панели
+
+7. **Создайте роль admin**
+   - **Realm roles** → **Create role**
+   - **Role Name**: `admin`
+
+### Переменные окружения для Keycloak
+
+| Переменная | Описание | Пример |
+|------------|----------|--------|
+| `VITE_KEYCLOAK_URL` | URL сервера Keycloak | `http://localhost:8080` |
+| `VITE_KEYCLOAK_REALM` | Имя Realm | `my-app` |
+| `VITE_KEYCLOAK_CLIENT_ID` | Client ID | `canteen-web` |
+| `KEYCLOAK_CLIENT_SECRET` | Client Secret из вкладки Credentials | `VCHfWLin...` |
 
 ---
 
@@ -247,27 +186,25 @@ Loki собирает логи из:
 ```
 ├── app/
 │   ├── components/          # React компоненты
-│   │   └── layout/          # Layout (Header, Footer)
-│   ├── constants/           # Константы
+│   │   └── layout/          # Layout компоненты (Header, Footer)
+│   ├── constants/           # Константы приложения
 │   ├── context/             # React Context (Auth, Cart)
 │   ├── lib/                 # Утилиты (auth, db)
 │   ├── routes/              # Роуты приложения
-│   │   ├── home.tsx         # Главная страница
+│   │   ├── home.tsx         # Главная страница (меню)
 │   │   ├── cart.tsx         # Корзина
 │   │   ├── login.tsx        # Авторизация
-│   │   ├── profile.tsx      # Профиль
+│   │   ├── profile.tsx      # Профиль пользователя
 │   │   ├── admin.*.tsx      # Админ-панель
 │   │   └── api.*.tsx        # API роуты
-│   └── root.tsx             # Корневой компонент
+│   ├── styles/              # Стили
+│   ├── root.tsx             # Корневой компонент
+│   └── routes.ts            # Конфигурация роутов
 ├── prisma/
-│   ├── schema.prisma        # Схема БД
-│   └── seed.ts              # Начальные данные
-├── prometheus/              # Конфиг Prometheus
-├── grafana/                 # Provisioning Grafana
-├── loki/                    # Конфиг Loki
-├── promtail/                # Конфиг Promtail
-├── tests/                   # Jest тесты
-├── docker-compose.yml       # Docker Compose
+│   ├── schema.prisma        # Схема базы данных
+│   └── migrations/          # Миграции
+├── public/                  # Статические файлы
+├── build/                   # Продакшн сборка
 └── package.json
 ```
 
@@ -278,10 +215,7 @@ Loki собирает логи из:
 | Метод | Endpoint | Описание |
 |-------|----------|----------|
 | GET | `/api/check-auth` | Проверка авторизации |
-| POST | `/api/login` | Вход (ROPC) |
-| POST | `/api/logout` | Выход |
-| POST | `/api/create-order` | Создание заказа |
-| GET | `/api/user-orders` | История заказов |
+| POST | `/api/logout` | Выход из системы |
 
 ---
 
@@ -291,38 +225,50 @@ Loki собирает логи из:
 - Просмотр меню
 - Добавление в корзину
 - Оформление заказов
+- Оплата заказов
 
 ### Администратор (admin)
 - Все возможности студента
 - Управление меню
 - Обработка заказов
-- Изменение статусов
+- Изменение статусов заказов
 
 ---
 
-## ⏰ Рабочее время
+##  Рабочее время
 
-Система работает в будние дни с 08:00 до 18:00.
+Система работает в будние дни с 08:00 до 16:00.
+Для тестирования можно установить `VITE_SKIP_TIME_CHECK=true`.
 
 ---
 
 ## 📝 История разработки
 
-### Версия 1.0 (04.01.2026 — 25.02.2026)
-- Инициализация проекта
-- React Router v7 Framework Mode
-- Keycloak SSO интеграция
-- Админ-панель
-- Система заказов
+### Этап 1: Проектирование и Фундамент (04.01.2026 — 15.01.2026)
+- Инициализация проекта на React Router v7
+- Разработка дизайн-системы
+- Настройка Prisma ORM
+- Первичное наполнение БД
 
-### Версия 1.1 (02.04.2026)
-- Performance optimization (Vite)
-- Bundle optimization
-- Database indexes
-- Security hardening (валидация API)
-- SEO optimization
-- Jest testing setup
-- Prometheus + Grafana + Loki мониторинг
+### Этап 2: Интеграция безопасности (16.01.2026 — 30.01.2026)
+- Развертывание Keycloak
+- Настройка OIDC и ролевой модели
+- Реализация защищенных роутов
+
+### Этап 3: Витрина и Пользовательский опыт (01.02.2026 — 12.02.2026)
+- Интерактивное меню с фильтрацией
+- Корзина заказов
+- Система уведомлений
+
+### Этап 4: Администрирование и Оплата (13.02.2026 — 20.02.2026)
+- Админ-панель
+- Интеграция платежного шлюза
+- Конструктор меню
+
+### Этап 5: Оптимизация и Финальный Билд (21.02.2026 — 25.02.2026)
+- Исправление багов
+- Тестирование производительности
+- Финальная сборка
 
 ---
 
@@ -333,4 +279,4 @@ MIT License
 ---
 
 **Организация:** СибГИУ (Сибирский государственный индустриальный университет)  
-**Статус:** Production Ready
+**Статус проекта:** MVP завершен (25.02.2026)

@@ -40,6 +40,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const CART_STORAGE_KEY = "sibgiu_canteen_cart";
+const CART_DATE_KEY = "sibgiu_canteen_cart_date";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -48,8 +49,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Загрузка корзины из localStorage при монтировании
   useEffect(() => {
     try {
+      const today = new Date().toDateString();
+      const savedCartDate = localStorage.getItem(CART_DATE_KEY);
       const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-      if (savedCart) {
+
+      // Очищаем корзину если это другой день
+      if (savedCartDate !== today) {
+        localStorage.removeItem(CART_STORAGE_KEY);
+        localStorage.removeItem(CART_DATE_KEY);
+        setItems([]);
+      } else if (savedCart) {
         const parsed = JSON.parse(savedCart);
         // Проверяем что данные соответствуют ожидаемому типу
         if (isValidCartItems(parsed)) {
@@ -58,30 +67,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
           // Данные повреждены - очищаем
           console.warn("Cart data corrupted, clearing...");
           localStorage.removeItem(CART_STORAGE_KEY);
+          localStorage.removeItem(CART_DATE_KEY);
         }
       }
     } catch (error) {
       console.error("Error loading cart from localStorage:", error);
       localStorage.removeItem(CART_STORAGE_KEY);
+      localStorage.removeItem(CART_DATE_KEY);
     }
     setIsLoaded(true);
 
-    // Слушаем событие logout для очистки корзины
-    const handleLogout = () => {
-      clearCart()
-    };
-    window.addEventListener(LOGOUT_EVENT, handleLogout);
-    
-    return () => {
-      window.removeEventListener(LOGOUT_EVENT, handleLogout);
-    };
+    // ❌ Убрано очищение корзины при выходе из аккаунта - теперь корзина сохраняется
   }, []);
 
   // Сохранение корзины в localStorage при изменении
   useEffect(() => {
     if (isLoaded) {
       try {
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+        if (items.length > 0) {
+          localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+          localStorage.setItem(CART_DATE_KEY, new Date().toDateString());
+        } else {
+          localStorage.removeItem(CART_STORAGE_KEY);
+          localStorage.removeItem(CART_DATE_KEY);
+        }
       } catch (error) {
         console.error("Error saving cart to localStorage:", error);
       }

@@ -4,6 +4,7 @@ import { Link, NavLink, useNavigate } from "react-router";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 
+
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { totalItems } = useCart();
@@ -18,7 +19,9 @@ export function Header() {
   };
 
   const handleLogout = () => {
-    logout();
+    if (confirm("Вы действительно хотите выйти из аккаунта?")) {
+      logout();
+    }
   };
 
   return (
@@ -65,7 +68,7 @@ export function Header() {
             {isAuthenticated && isAdmin && (
               <NavLink
                 to="/admin"
-                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-[#FF8C00] to-[#FF6B00] hover:from-[#FF9E00] hover:to-[#FF8C00] text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 border-2 border-white/50 no-underline"
+                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-[#9B59B6] to-[#8E44AD] hover:from-[#A569BD] hover:to-[#9B59B6] text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 border-2 border-white/50 no-underline"
                 title="Панель управления"
               >
                 <Settings className="w-5 h-5" />
@@ -89,24 +92,24 @@ export function Header() {
             </NavLink>
             
             {/* Кнопка профиля */}
-            {isAuthenticated ? (
-              <NavLink
-                to="/profile"
-                className={({ isActive }) => 
-                  isActive ? "hidden md:flex items-center gap-2 p-3 rounded-2xl bg-white/30 backdrop-blur-md shadow-lg transition-all duration-200 no-underline" : 
-                  "hidden md:flex items-center gap-2 p-3 rounded-2xl hover:bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 no-underline"
-                }
-              >
-                <User className="w-6 h-6 text-white drop-shadow-md" />
-              </NavLink>
-            ) : (
-              <button 
-                onClick={() => navigate("/login")}
-                className="bg-white hover:bg-gray-100 text-[#0066CC] font-medium py-2 px-4 rounded-xl cursor-pointer"
-              >
-                Войти
-              </button>
-            )}
+              {isAuthenticated ? (
+                <NavLink 
+                  to="/profile" 
+                  className={({ isActive }) => 
+                    isActive ? "hidden md:flex items-center gap-2 p-3 rounded-2xl bg-white/30 backdrop-blur-md shadow-lg transition-all duration-200 no-underline" : 
+                    "hidden md:flex items-center gap-2 p-3 rounded-2xl hover:bg-white/20 backdrop-blur-md transition-all duration-200 hover:scale-105 no-underline"
+                  }
+                >
+                  <User className="w-6 h-6 text-white drop-shadow-md" />
+                </NavLink>
+              ) : (
+                <button 
+                  onClick={() => navigate("/login")}
+                  className="bg-white hover:bg-gray-100 text-[#0066CC] font-medium py-2 px-4 rounded-xl cursor-pointer"
+                >
+                  Войти
+                </button>
+              )}
             
             {/* Мобильное меню */}
             <button 
@@ -144,7 +147,7 @@ export function Header() {
               {isAuthenticated && isAdmin && (
                 <NavLink
                   to="/admin"
-                  className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-gradient-to-r from-[#FF8C00] to-[#FF6B00] text-white font-bold shadow-lg no-underline"
+                  className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-gradient-to-r from-[#9B59B6] to-[#8E44AD] text-white font-bold shadow-lg no-underline"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Settings className="w-5 h-5" />

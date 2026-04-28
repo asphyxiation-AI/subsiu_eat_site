@@ -3,8 +3,10 @@ import { useSearchParams } from "react-router";
 import { Clock, Flame, Wallet, Plus, Check, Utensils, Sparkles, ChevronDown, Star, Users, Coffee } from "lucide-react";
 import type { Route } from "./+types/home";
 import { prisma } from "../lib/db.server";
+import { toast } from "sonner";
 import { useCart } from "../context/CartContext";
 import { getCurrentCycleDay } from "../lib/timezone";
+
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -33,7 +35,7 @@ export async function loader() {
   
   const menuItems = products.map(p => ({
     ...p,
-    category: p.category?.name || "Наборы",
+    category: (p.category?.name || "Наборы").charAt(0).toUpperCase() + (p.category?.name || "Наборы").slice(1).toLowerCase(),
     price: Number(p.price),
     description: p.description || "",
   }));
@@ -90,7 +92,7 @@ function FoodCard({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
       <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-violet-500 via-orange-400 to-cyan-400 opacity-80 group-hover:opacity-100 transition-opacity" />
       
       {/* Изображение */}
-      <div className="relative h-52 overflow-hidden">
+      <div className="relative h-36 md:h-52 overflow-hidden">
         <img
           src={item.image}
           alt={item.name}
@@ -111,7 +113,7 @@ function FoodCard({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => 
       </div>
 
       {/* Контент */}
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <h3 className="text-xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-2">
           {item.name}
         </h3>
@@ -192,6 +194,17 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       price: item.price,
       image: item.image,
     });
+    
+    toast.success(`"${item.name}" добавлен в корзину`, {
+      position: 'top-right',
+      duration: 3000,
+      offset: 90,
+      closeButton: true,
+      style: {
+        borderRadius: '12px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+      },
+    });
   };
 
   const filteredMenu = menuItems.filter(item => item.category === activeCategory);
@@ -221,21 +234,17 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 <span className="text-violet-700 font-semibold text-sm">Новый сервис онлайн-заказов!</span>
               </div>
 
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight">
-                <span className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
-                  Вкусный обед —
-                </span>
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-black leading-tight text-slate-900">
+                Вкусный обед —
                 <br />
-                <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
-                  успешный день!
-                </span>
+                успешный день!
               </h1>
 
-              <p className="text-xl text-slate-600 leading-relaxed max-w-xl">
+              <p className="text-base md:text-xl text-slate-600 leading-relaxed max-w-xl">
                 Заказывайте любимые блюда онлайн и забирайте без очереди. 
-                Сегодня <span className="text-orange-500 font-bold">{dayName}</span>
+                Сегодня <span className="font-bold text-slate-800">{dayName}</span>
                 {todayDish && (
-                  <span> — <span className="text-violet-600 font-semibold">{todayDish}</span></span>
+                  <span> — <span className="font-semibold text-slate-800">{todayDish}</span></span>
                 )}
               </p>
 
@@ -258,21 +267,21 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               </div>
 
               {/* Статистика */}
-              <div className="flex gap-8 pt-4">
-                <div className="text-center">
-                  <div className="text-3xl font-black bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">1000+</div>
-                  <div className="text-sm text-slate-500">довольных студентов</div>
-                </div>
+              <div className="flex flex-wrap gap-4 md:gap-8 pt-4 justify-between md:justify-start">
+                  <div className="text-center flex-1 min-w-[80px]">
+                    <div className="text-2xl md:text-3xl font-black text-slate-800">1000+</div>
+                    <div className="text-xs md:text-sm text-slate-500">довольных студентов</div>
+                  </div>
                 <div className="w-px bg-slate-200" />
-                <div className="text-center">
-                  <div className="text-3xl font-black bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">1-5мин</div>
-                  <div className="text-sm text-slate-500">среднее время ожидания</div>
-                </div>
+                  <div className="text-center flex-1 min-w-[80px]">
+                    <div className="text-2xl md:text-3xl font-black text-slate-800">1-5мин</div>
+                    <div className="text-xs md:text-sm text-slate-500">среднее время ожидания</div>
+                  </div>
                 <div className="w-px bg-slate-200" />
-                <div className="text-center">
-                  <div className="text-3xl font-black bg-gradient-to-r from-violet-500 to-purple-500 bg-clip-text text-transparent">50+</div>
-                  <div className="text-sm text-slate-500">блюд каждый день</div>
-                </div>
+                  <div className="text-center flex-1 min-w-[80px]">
+                    <div className="text-2xl md:text-3xl font-black text-slate-800">50+</div>
+                    <div className="text-xs md:text-sm text-slate-500">блюд каждый день</div>
+                  </div>
               </div>
             </div>
 
@@ -320,17 +329,17 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 relative bg-gradient-to-r from-violet-100 via-purple-100 to-fuchsia-100">
+      <section className="py-12 md:py-24 relative bg-gradient-to-r from-violet-100 via-purple-100 to-fuchsia-100">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Карточка 1 */}
-            <div className="group relative bg-white/70 backdrop-blur-xl rounded-3xl p-8 border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+            <div className="group relative bg-white/70 backdrop-blur-xl rounded-3xl p-5 md:p-8 border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-0 md:hover:-translate-y-2 overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-400/20 to-purple-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
               <div className="relative z-10">
-                <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-violet-500/30">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 shadow-lg shadow-violet-500/30">
                   <Clock className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-800 mb-3">Экономия времени</h3>
+                <h3 className="text-lg md:text-2xl font-bold text-slate-800 mb-2 md:mb-3">Экономия времени</h3>
                 <p className="text-slate-600 leading-relaxed">
                   Оформите заказ онлайн и заберите его в удобное время без очереди
                 </p>
@@ -409,7 +418,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           </div>
 
           {/* Сетка блюд */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             {filteredMenu.map((item) => (
               <FoodCard key={item.id} item={item} onAdd={handleAddToCart} />
             ))}
@@ -528,7 +537,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-orange-500 to-amber-500 rounded-3xl p-8 text-white shadow-xl">
+              <div className="bg-gradient-to-br from-[#9B59B6] to-[#8E44AD] rounded-3xl p-8 text-white shadow-xl">
                 <h4 className="font-bold text-xl mb-4">Режим работы</h4>
                 <ul className="space-y-3">
                   <li className="flex justify-between">
@@ -540,24 +549,26 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     <span className="font-bold">08:00 - 15:00</span>
                   </li>
                   <li className="flex justify-between">
-                    <span className="text-white/70">Суббота - Воскресенье</span>
-                    <span className="text-white/50">Выходной</span>
+                    <span className="text-white/90">Суббота - Воскресенье</span>
+                    <span className="font-bold">Выходной</span>
                   </li>
                 </ul>
               </div>
             </div>
 
             {/* Карта */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl overflow-hidden border border-slate-200/50 shadow-lg h-[100%]">
-              <iframe
-                src="https://yandex.ru/map-widget/v1/?ll=87.128618%2C53.756404&z=16&pt=87.128483%2C53.756440%2Cpm2rdm"
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                allowFullScreen
-                title="Карта СибГИУ"
-              />
-            </div>
+<div className="bg-white/80 backdrop-blur-xl rounded-3xl overflow-hidden border border-slate-200/50 shadow-lg h-[100%]">
+  <iframe
+    src="https://yandex.ru/map-widget/v1/?ll=87.128618%2C53.756403&z=17&pt=87.128618%2C53.756403%2Cpm2rdm"
+    width="100%"
+    height="100%"
+    className="border-none"
+    allowFullScreen
+    loading="lazy"
+    allow="clipboard-write"
+    title="Столовая СибГИУ"
+  />
+</div>
           </div>
         </div>
       </section>

@@ -32,7 +32,7 @@ export function meta({}: Route.MetaArgs) {
 interface Product {
   id: string;
   name: string;
-  description?: string;
+  description: string | null;
   price: number;
   category: string;
   image: string;
@@ -106,9 +106,37 @@ export async function action({ request }: Route.ActionArgs) {
       if (product) await prisma.product.update({ where: { id }, data: { isVisible: !product.isVisible } });
       return { success: true, message: product?.isVisible ? "Блюдо скрыто" : "Блюдо видно" };
     }
+    if (intent === "toggleVisibilityAll") {
+      const filterDay = formData.get("filterDay") ? parseInt(formData.get("filterDay") as string) : null;
+      const filterWeek = formData.get("filterWeek") ? parseInt(formData.get("filterWeek") as string) : null;
+      
+      const where: any = {};
+      if (filterDay !== null) where.dayOfWeek = filterDay;
+      if (filterWeek !== null) where.weekType = filterWeek;
+      
+      const products = await prisma.product.findMany({ where, select: { id: true, isVisible: true } });
+      const allVisible = products.every(p => p.isVisible);
+      
+      await prisma.product.updateMany({ where, data: { isVisible: !allVisible } });
+      
+      return { success: true, message: `Обновлено ${products.length} блюд` };
+    }
     if (intent === "delete") {
       await prisma.product.delete({ where: { id: formData.get("id") as string } });
       return { success: true, message: "Блюдо удалено" };
+    }
+    if (intent === "deleteAll") {
+      const filterDay = formData.get("filterDay") ? parseInt(formData.get("filterDay") as string) : null;
+      const filterWeek = formData.get("filterWeek") ? parseInt(formData.get("filterWeek") as string) : null;
+      
+      const where: any = {};
+      if (filterDay !== null) where.dayOfWeek = filterDay;
+      if (filterWeek !== null) where.weekType = filterWeek;
+      
+      const count = await prisma.product.count({ where });
+      await prisma.product.deleteMany({ where });
+      
+      return { success: true, message: `Удалено ${count} блюд` };
     }
     if (intent === "create" || intent === "update") {
       const id = formData.get("id") as string | undefined;
@@ -160,6 +188,24 @@ export default function AdminMenu({ loaderData }: Route.ComponentProps) {
   const handleDelete = (id: string) => { if (confirm("Удалить это блюдо?")) fetcher.submit({ intent: "delete", id }, { method: "post" }); };
   const handleToggleVisibility = (id: string) => fetcher.submit({ intent: "toggleVisibility", id }, { method: "post" });
   const handlePublish = (weekType: number) => fetcher.submit({ intent: "publish", weekType: weekType.toString() }, { method: "post" });
+  
+  const handleToggleAll = () => {
+    const formData = new FormData();
+    formData.append("intent", "toggleVisibilityAll");
+    if (filterDay !== null) formData.append("filterDay", filterDay.toString());
+    if (filterWeek !== null) formData.append("filterWeek", filterWeek.toString());
+    fetcher.submit(formData, { method: "post" });
+  };
+  
+  const handleDeleteAll = () => {
+    if (confirm(`Удалить ВСЕ ${filteredProducts.length} отфильтрованных блюд? Это действие нельзя отменить!`)) {
+      const formData = new FormData();
+      formData.append("intent", "deleteAll");
+      if (filterDay !== null) formData.append("filterDay", filterDay.toString());
+      if (filterWeek !== null) formData.append("filterWeek", filterWeek.toString());
+      fetcher.submit(formData, { method: "post" });
+    }
+  };
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file) { if (file.size > 2 * 1024 * 1024) { alert("Файл слишком большой"); return; } const reader = new FileReader(); reader.onloadend = () => setImagePreview(reader.result as string); reader.readAsDataURL(file); } };
   const handleCloseForm = () => { setShowForm(false); setEditingProduct(null); setImagePreview(""); };
   const clearFilters = () => { setFilterDay(null); setFilterWeek(null); };
@@ -201,11 +247,30 @@ export default function AdminMenu({ loaderData }: Route.ComponentProps) {
             <button onClick={() => setFilterWeek(null)} className={`px-4 py-2 rounded-xl font-medium ${filterWeek === null ? "bg-sib-blue text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>Все недели</button>
             {weekTypes.map((wt) => (<button key={wt.value} onClick={() => setFilterWeek(wt.value)} className={`px-4 py-2 rounded-xl font-medium ${filterWeek === wt.value ? "bg-sib-blue text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>{wt.label} ({getCountForWeek(wt.value)})</button>))}
           </div>
-        </div>
-      </div>
+         </div>
 
-      <div className="flex justify-end mb-6">
-        <button onClick={() => { setEditingProduct(null); setImagePreview(""); setShowForm(true); }} className="flex items-center gap-2 bg-sib-blue hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl"><Plus className="w-5 h-5" />Добавить блюдо</button>
+       </div>
+
+       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div className="flex flex-wrap gap-3">
+           <button 
+             onClick={handleToggleAll} 
+             disabled={filteredProducts.length === 0 || fetcher.state !== "idle"}
+             className="flex items-center gap-2 px-4 py-2.5 bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+           >
+             <Eye className="w-4 h-4" />
+             Переключить ({filteredProducts.length})
+           </button>
+           <button 
+             onClick={handleDeleteAll} 
+             disabled={filteredProducts.length === 0 || fetcher.state !== "idle"}
+             className="flex items-center gap-2 px-4 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+           >
+             <Trash2 className="w-4 h-4" />
+             Удалить все ({filteredProducts.length})
+           </button>
+        </div>
+        <button onClick={() => { setEditingProduct(null); setImagePreview(""); setShowForm(true); }} className="flex items-center gap-2 bg-sib-blue hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-xl"><Plus className="w-5 h-5" />Добавить блюдо</button>
       </div>
 
       {showForm && (

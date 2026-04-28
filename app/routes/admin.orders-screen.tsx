@@ -31,12 +31,12 @@ export default function OrdersScreen() {
   }, [revalidator]);
 
   // Группируем заказы по временным слотам
-  const groupBySlot = (orderList) => {
-    const groups = {};
+  const groupBySlot = (orderList: any[]) => {
+    const groups: { [key: string]: any[] } = {};
 
     orderList.forEach(order => {
       const slotKey = order.timeSlot
-        ? `${order.timeSlot.label} (${order.timeSlot.startTime} - ${order.timeSlot.endTime})`
+        ? `${order.timeSlot.label}`
         : 'Без времени';
 
       if (!groups[slotKey]) {
@@ -75,20 +75,19 @@ export default function OrdersScreen() {
             <div className="p-8">
               {preparingGroups.map(([slotName, slotOrders]) => (
                 <div key={slotName} className="mb-6 last:mb-0">
-                  <div className="font-bold text-gray-700 mb-3 text-lg">{slotName}</div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {slotOrders.map((order, index) => (
-                      <div
-                        key={order.id}
-                        className="bg-gradient-to-br from-amber-50 to-orange-100 border-2 border-orange-200 rounded-2xl p-5 text-center transform transition-all hover:scale-105 hover:shadow-lg"
-                      >
-                        <div className="text-5xl font-black text-orange-700">
-                          №{order.orderNumber}
+                    {slotOrders.map((order: any, index: number) => (
+                        <div
+                          key={order.id}
+                          className="bg-gradient-to-br from-amber-50 to-orange-100 border-2 border-orange-200 rounded-2xl p-5 text-center transform transition-all hover:scale-105 hover:shadow-lg min-w-[120px] min-h-[120px] flex flex-col items-center justify-center"
+                        >
+                         <div className="text-4xl lg:text-5xl font-black text-orange-700">
+                           №{order.orderNumber}
+                         </div>
+                         <div className="mt-2 text-sm font-medium text-orange-600">
+                           Готовится к {order.timeSlot?.label || ''}
+                         </div>
                         </div>
-                        <div className="mt-2 text-sm font-medium text-orange-600">
-                          В процессе
-                        </div>
-                      </div>
                     ))}
                   </div>
                 </div>
@@ -116,19 +115,18 @@ export default function OrdersScreen() {
             <div className="p-8">
               {readyGroups.map(([slotName, slotOrders]) => (
                 <div key={slotName} className="mb-6 last:mb-0">
-                  <div className="font-bold text-gray-700 mb-3 text-lg">{slotName}</div>
                   <div className="flex flex-wrap gap-6 justify-center">
-                    {slotOrders.map((order, index) => (
+                    {slotOrders.map((order: any, index: number) => (
                       <div
                         key={order.id}
                         className="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-2xl px-10 py-8 shadow-2xl transform transition-all hover:scale-110 cursor-pointer"
                         style={{ animation: 'pulse 2s infinite' }}
                       >
-                        <div className="text-7xl font-black">
+                        <div className="text-5xl lg:text-6xl font-black">
                           №{order.orderNumber}
                         </div>
-                        <div className="mt-3 text-center text-green-100 font-medium">
-                          ✅ Заберите заказ
+                        <div className="mt-2 text-center text-green-100 font-medium text-lg">
+                          ✅ Готов к {order.timeSlot?.label || ''}
                         </div>
                       </div>
                     ))}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { User, LogOut, ShoppingBag, Settings, CheckCircle, XCircle, Clock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useConfirm } from "../components/ui/ConfirmModal";
 import type { Route } from "./+types/profile";
 
 export function meta({}: Route.MetaArgs) {
@@ -16,6 +17,7 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState<"orders" | "settings">("orders");
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const { confirm } = useConfirm();
 
   // Загружаем заказы при монтировании
   useEffect(() => {
@@ -72,10 +74,18 @@ export default function Profile() {
   const isAdmin = hasRole("admin");
   
   const handleLogout = async () => {
-    try {
-      await fetch("/api/logout", { method: "POST", credentials: "include" });
-    } finally {
-      logout();
+    const confirmed = await confirm({
+      title: "Вы действительно хотите выйти из аккаунта?",
+      confirmText: "Выйти",
+      cancelText: "Отмена"
+    });
+    
+    if (confirmed) {
+      try {
+        await fetch("/api/logout", { method: "POST", credentials: "include" });
+      } finally {
+        logout();
+      }
     }
   };
 
