@@ -151,9 +151,9 @@ export default function Cart() {
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Ваша корзина пуста</h1>
           <p className="text-gray-600 mb-8">Выберите блюда из нашего меню!</p>
-          <Link to="/" className="inline-flex items-center gap-2 bg-[#0066CC] hover:bg-[#0052A3] text-white font-medium py-3 px-6 rounded-xl">
-            <ArrowLeft className="w-5 h-5" /> Перейти в меню
-          </Link>
+           <Link to="/#menu" className="inline-flex items-center gap-2 bg-[#0066CC] hover:bg-[#0052A3] text-white font-medium py-3 px-6 rounded-xl">
+             <ArrowLeft className="w-5 h-5" /> Перейти в меню
+           </Link>
         </div>
       </div>
     );

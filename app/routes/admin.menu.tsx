@@ -151,7 +151,7 @@ export async function action({ request }: Route.ActionArgs) {
       const weekType = parseInt(formData.get("weekType") as string);
       const category = await prisma.category.findFirst({ where: { name: categoryName } });
       if (!category) return { success: false, message: "Категория не найдена" };
-      const finalImage = image || "/images/default-food.jpg";
+       const finalImage = image || "/bludo412.png";
       if (intent === "create") {
         await prisma.product.create({ data: { name, description, price, categoryId: category.id, image: finalImage, isAvailable, isVisible, dayOfWeek, weekType } });
         return { success: true, message: "Блюдо добавлено" };

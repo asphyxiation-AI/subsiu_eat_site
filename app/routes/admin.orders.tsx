@@ -43,10 +43,14 @@ interface Order {
 
 export async function loader() {
   try {
-    const orders = await prisma.order.findMany({
-      orderBy: { createdAt: "desc" },
-      include: { orderItems: true },
-    });
+    const [orders, totalCount] = await prisma.$transaction([
+      prisma.order.findMany({
+        orderBy: { createdAt: "desc" },
+        include: { orderItems: true },
+        take: 500, // ✅ Показываем 500 последних заказов - более чем достаточно для работы
+      }),
+      prisma.order.count()
+    ]);
 
     const formattedOrders = orders.map((order) => ({
       id: order.id,
@@ -64,10 +68,10 @@ export async function loader() {
       })),
     }));
 
-    return { orders: formattedOrders };
+    return { orders: formattedOrders, totalCount };
   } catch (error) {
     console.error("Error loading orders:", error);
-    return { orders: [] };
+    return { orders: [], totalCount: 0 };
   }
 }
 
@@ -227,7 +231,7 @@ export default function AdminOrders({ loaderData }: Route.ComponentProps) {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredOrders.map((order) => (
+          {filteredOrders.slice(0, 50).map((order) => (
             <div key={order.id} className="bg-white rounded-2xl shadow-md p-6">
               <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <div className="flex items-center gap-2 flex-wrap">

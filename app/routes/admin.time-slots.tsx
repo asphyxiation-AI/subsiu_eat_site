@@ -88,6 +88,12 @@ export async function action({ request }) {
   if (intent === "updateCapacity") {
     const id = formData.get("id") as string;
     const capacity = parseInt(formData.get("capacity") as string);
+    
+    // Валидация на сервере
+    if (isNaN(capacity) || capacity < 1 || capacity > 500) {
+      throw new Error("Вместимость должна быть числом от 1 до 500");
+    }
+
     await prisma.timeSlot.update({
       where: { id },
       data: { capacity }
@@ -366,11 +372,30 @@ export default function AdminTimeSlots() {
                       <span className="text-xs text-gray-600">Лимит:</span>
                       <input
                         name="capacity"
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         min="1"
+                        max="500"
                         defaultValue={slot.capacity}
+                        data-original={slot.capacity}
                         className="w-16 border border-gray-200 rounded-lg px-1 py-1 text-center text-sm"
-                        onBlur={(e) => e.target.form?.submit()}
+                        onInput={(e) => {
+                          // Только цифры
+                          (e.target as HTMLInputElement).value = (e.target as HTMLInputElement).value.replace(/\D/g, '');
+                        }}
+                        onBlur={(e) => {
+                          const input = e.target as HTMLInputElement;
+                          const val = parseInt(input.value);
+                          const original = parseInt(input.dataset.original || "0");
+                          
+                          if(isNaN(val) || val < 1) input.value = original.toString();
+                          if(val > 500) input.value = "500";
+                          
+                          // Отправляем ТОЛЬКО если значение реально изменилось
+                          if(parseInt(input.value) !== original) {
+                            input.form?.submit();
+                          }
+                        }}
                       />
                     </div>
                   </form>

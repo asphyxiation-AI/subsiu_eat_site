@@ -201,7 +201,7 @@ export default function Profile() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Группа</label>
               <input type="text" defaultValue={user?.group || "Не указана"} disabled className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-gray-500" />
             </div>
-            <p className="text-sm text-gray-500">Для изменения данных обратитесь в деканат.</p>
+            <p className="text-sm text-gray-500">Для изменения данных обратитесь к администратору.</p>
           </div>
         </div>
       )}

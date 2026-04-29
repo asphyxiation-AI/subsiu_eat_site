@@ -47,11 +47,10 @@ export default function Login() {
         <div className="bg-white rounded-3xl shadow-2xl p-8">
           {/* Заголовок */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-[#0066CC] rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-2xl">С</span>
-            </div>
+            <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
+  <img src="/logo_sibsiu.png" alt="Логотип СибГИУ" className="w-full h-full object-contain p-1" />
+</div>
             <h1 className="text-2xl font-bold text-gray-900">Вход в систему</h1>
-            <p className="text-gray-500 mt-2">Авторизуйтесь через Keycloak</p>
           </div>
 
           {/* Ошибка */}
@@ -82,7 +81,7 @@ export default function Login() {
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Логин (username)
+                Логин
               </label>
               <input
                 type="text"

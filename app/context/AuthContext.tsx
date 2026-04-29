@@ -75,14 +75,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.error || "Ошибка авторизации" };
       }
 
+      // ✅ ВАЛИДАЦИЯ: Авторизация успешна ТОЛЬКО если есть реальный пользователь от сервера
+      if (!data.user) {
+        return { success: false, error: "Неверный логин или пароль" };
+      }
+
       const userData: UserProfile = {
-        id: data.user?.id || `user-${Date.now()}`,
-        username: data.user?.username || username,
-        email: data.user?.email || `${username}@sibgiu.ru`,
-        firstName: data.user?.firstName || "",
-        lastName: data.user?.lastName || "",
-        fullName: data.user?.fullName || username,
-        roles: data.user?.roles || ["student"],
+        id: data.user.id,
+        username: data.user.username,
+        email: data.user.email,
+        firstName: data.user.firstName || "",
+        lastName: data.user.lastName || "",
+        fullName: data.user.fullName || data.user.username,
+        group: data.user.group,
+        roles: data.user.roles || ["student"],
       };
 
       // Токены теперь хранятся в HTTP-only куках на сервере

@@ -135,63 +135,27 @@ export async function action({ request }: Route.ActionArgs) {
         body: params.toString(),
       });
 
-      if (!response.ok) {
-        // Если Keycloak недоступен - пробуем офлайн режим для dev
-        if (import.meta.env.DEV && process.env.NODE_ENV !== "production") {
-          console.warn("Keycloak недоступен, используем офлайн режим для разработки");
-          // Простая эмуляция токена для dev
-          const fakeToken = Buffer.from(JSON.stringify({
-            sub: `user-${username}`,
-            preferred_username: username,
-            email: `${username}@sibsiu.ru`,
-            realm_access: { roles: username === "admin" ? ["admin", "student"] : ["student"] },
-            exp: Math.floor(Date.now() / 1000) + 3600,
-          })).toString("base64");
-          
-          tokens = {
-            access_token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${fakeToken}.fake_signature`,
-            refresh_token: `refresh_${Date.now()}`,
-            expires_in: 3600,
-          };
-        } else {
-          const errorData = await response.json().catch(() => ({}));
-          console.error("Keycloak error:", errorData);
-          
-          if (errorData.error === "invalid_grant") {
-            return Response.json({ error: "Неверный логин или пароль" }, { status: 401 });
-          }
-          if (errorData.error === "unauthorized_client") {
-            return Response.json({ error: "Клиент не настроен в Keycloak" }, { status: 500 });
-          }
-          if (errorData.error === "Realm does not exist") {
-            return Response.json({ error: "Realm не настроен в Keycloak" }, { status: 500 });
-          }
-          return Response.json({ error: "Ошибка авторизации" }, { status: 401 });
-        }
-      } else {
-        tokens = await response.json();
-      }
-    } catch (keycloakError) {
-      // При ошибке сети - fallback для dev режима
-      if (import.meta.env.DEV) {
-        console.warn("Ошибка подключения к Keycloak, используем офлайн режим:", keycloakError);
-        const fakeToken = Buffer.from(JSON.stringify({
-          sub: `user-${username}`,
-          preferred_username: username,
-          email: `${username}@sibsiu.ru`,
-          realm_access: { roles: username === "admin" ? ["admin", "student"] : ["student"] },
-          exp: Math.floor(Date.now() / 1000) + 3600,
-        })).toString("base64");
-        
-        tokens = {
-          access_token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${fakeToken}.fake_signature`,
-          refresh_token: `refresh_${Date.now()}`,
-          expires_in: 3600,
-        };
-      } else {
-        throw keycloakError;
-      }
-    }
+       if (!response.ok) {
+         const errorData = await response.json().catch(() => ({}));
+         console.error("Keycloak error:", errorData);
+         
+         if (errorData.error === "invalid_grant") {
+           return Response.json({ error: "Неверный логин или пароль" }, { status: 401 });
+         }
+         if (errorData.error === "unauthorized_client") {
+           return Response.json({ error: "Клиент не настроен в Keycloak" }, { status: 500 });
+         }
+         if (errorData.error === "Realm does not exist") {
+           return Response.json({ error: "Realm не настроен в Keycloak" }, { status: 500 });
+         }
+         return Response.json({ error: "Ошибка авторизации" }, { status: 401 });
+       }
+
+       tokens = await response.json();
+     } catch (keycloakError) {
+       console.error("Keycloak connection error:", keycloakError);
+       return Response.json({ error: "Ошибка соединения с сервером авторизации" }, { status: 503 });
+     }
 
     if (!tokens) {
       return Response.json({ error: "Не удалось получить токен авторизации" }, { status: 500 });
