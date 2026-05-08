@@ -4,7 +4,7 @@
  */
 
 import type { Route } from "./+types/api.login";
-import { KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID, getKeycloakClientSecret } from "../constants/config";
+import { KEYCLOAK_SERVER_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID, getKeycloakClientSecret } from "../constants/config";
 import { z } from "zod";
 
 // === Валидация входных данных ===
@@ -80,10 +80,11 @@ export async function action({ request }: Route.ActionArgs) {
   // Проверяем Referer заголовок для SameSite Lax защиты
   const referer = request.headers.get("Referer");
   const origin = request.headers.get("Origin");
-  const allowedOrigins = [
-    "http://localhost:5173",
-    "https://sibsiu-canteen.ru",
-  ];
+   const allowedOrigins = [
+     "http://localhost:5173",
+     "http://localhost:3000",
+     "https://sibsiu-canteen.ru",
+   ];
   
   // Разрешаем запросы с известных источников или без заголовков (для простоты)
   if (referer || origin) {
@@ -100,8 +101,10 @@ export async function action({ request }: Route.ActionArgs) {
     // Валидация входных данных
     const { username, password } = validateLoginInput(body);
 
-    // Запрос к Keycloak через сервер
-    const tokenUrl = `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token`;
+    // Запрос к Keycloak через сервер (внутренний адрес в сети docker)
+    const tokenUrl = `${KEYCLOAK_SERVER_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token`;
+    
+    console.log(`[Keycloak] Использую внутренний адрес для запроса: ${KEYCLOAK_SERVER_URL}`);
     
     // Получаем client secret, с fallback для dev
     let clientSecret: string;

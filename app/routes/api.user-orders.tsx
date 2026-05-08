@@ -48,6 +48,7 @@ export async function loader({ request }: { request: Request }) {
     const orders = await prisma.order.findMany({
       where: { userSub },
       orderBy: { createdAt: "desc" },
+      take: 20, // Ограничиваем последними 20 заказами для профиля
       include: {
         orderItems: true,
       },

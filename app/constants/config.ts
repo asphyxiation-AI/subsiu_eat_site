@@ -17,6 +17,12 @@ export const SKIP_TIME_CHECK = import.meta.env.VITE_SKIP_TIME_CHECK === "true";
 // === Конфигурация внешних сервисов ===
 // Keycloak - публичные параметры (безопасно для клиента)
 export const KEYCLOAK_URL = import.meta.env.VITE_KEYCLOAK_URL || "http://localhost:8080";
+
+// Keycloak SERVER URL - используется ТОЛЬКО на бэкенде для внутренних запросов между контейнерами
+export const KEYCLOAK_SERVER_URL = typeof window === 'undefined' 
+  ? (process.env.KEYCLOAK_SERVER_URL || KEYCLOAK_URL)
+  : KEYCLOAK_URL;
+
 export const KEYCLOAK_REALM = import.meta.env.VITE_KEYCLOAK_REALM || "my-app";
 export const KEYCLOAK_CLIENT_ID = import.meta.env.VITE_KEYCLOAK_CLIENT_ID || "canteen-web";
 

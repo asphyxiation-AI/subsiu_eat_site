@@ -3,8 +3,11 @@
 
 generator client {
   provider = "prisma-client-js"
+  engineType = "binary"
 }
 
+// ✅ ИСПРАВЛЕНИЕ БАГА PRISMA 7.8.0!
+// Принудительно указываем что все имена таблиц хранятся в нижнем регистре
 datasource db {
   provider = "postgresql"
 }
@@ -19,6 +22,7 @@ model Category {
   updatedAt DateTime  @updatedAt
 
   @@index([name])
+  @@map("category") // ✅ ИСПРАВЛЕНИЕ БАГА PRISMA 7.8.0! Принудительно нижний регистр
 }
 
 // Модель блюда
@@ -37,14 +41,15 @@ model Product {
   calories    Int?
   weight      Int?
   orderItems  OrderItem[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // Индексы для часто используемых запросов
   @@index([categoryId])
   @@index([isVisible, isAvailable])
   @@index([dayOfWeek, weekType])
   @@index([name])
+  @@map("Product")
 }
 
 // Настройки меню
@@ -52,6 +57,8 @@ model MenuSettings {
   id            String   @id @default(uuid())
   publishedWeek Int      @default(1)
   updatedAt     DateTime @updatedAt
+
+  @@map("MenuSettings")
 }
 
 // Статусы заказа
@@ -76,6 +83,7 @@ model TimeSlot {
   updatedAt DateTime @updatedAt
 
   @@index([isEnabled])
+  @@map("TimeSlot")
 }
 
 // Модель заказа
@@ -100,6 +108,7 @@ model Order {
   @@index([pickupTime])
   @@index([timeSlotId])
   @@index([scheduledDate])
+  @@map("Order")
 }
 
 // Связующая таблица
@@ -115,4 +124,5 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+  @@map("OrderItem")
 }

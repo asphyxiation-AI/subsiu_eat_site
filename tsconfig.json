@@ -1,27 +1,32 @@
 {
   "include": [
     "**/*",
-    "**/.server/**/*",
-    "**/.client/**/*",
-    ".react-router/types/**/*"
+    "**/.server/**/*", // Серверная логика React Router
+    "**/.client/**/*", // Клиентская логика
+    ".react-router/types/**/*" // Автогенерируемые типы маршрутов
   ],
   "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "types": ["node", "vite/client"],
-    "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
+    /* Базовые настройки */
+    "lib": ["DOM", "DOM.Iterable", "ES2022"], // Библиотеки, доступные в коде (DOM для браузера, ES2022 для свежих фич JS)
+    "types": ["node", "vite/client"], // Глобальные типы для Node.js и переменных окружения Vite
+    "target": "ES2022", // Во что компилируем код (современный стандарт)
+    "module": "ES2022", // Формат модулей (используем ESM)
+    "moduleResolution": "bundler", // Поиск модулей оптимизирован под сборщики (Vite)
+    "jsx": "react-jsx", // Поддержка React 17+ без необходимости импортировать React в каждом файле
+
+    /* Пути и навигация */
     "rootDirs": [".", "./.react-router/types"],
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./app/*"]
+      "~/*": ["./app/*"] // Соответствует alias в vite.config.ts для чистоты импортов
     },
-    "esModuleInterop": true,
-    "verbatimModuleSyntax": true,
-    "noEmit": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "strict": true
+
+    /* Совместимость и строгость */
+    "esModuleInterop": true, // Позволяет импортировать CommonJS модули как ES-модули
+    "verbatimModuleSyntax": true, // КИБЕРБЕЗОПАСНОСТЬ: Гарантирует, что импорты типов не попадут в билд (снижает размер и ошибки)
+    "noEmit": true, // TS только проверяет типы, за генерацию JS отвечает Vite (esbuild)
+    "resolveJsonModule": true, // Позволяет импортировать .json файлы как объекты
+    "skipLibCheck": true, // Ускоряет сборку, пропуская проверку типов в node_modules
+    "strict": true // ВКЛЮЧЕНА СТРОГАЯ ПРОВЕРКА: запрет на any, проверка на null и т.д.
   }
 }

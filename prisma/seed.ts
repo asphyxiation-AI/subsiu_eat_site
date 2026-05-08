@@ -2,13 +2,12 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 
-const pool = new pg.Pool({
-  host: "localhost",
-  port: 5432,
-  user: "postgres",
-  password: "1",
-  database: "sibsiu_canteen",
+const { Pool } = pg;
+
+const pool = new Pool({
+  connectionString: process.env["DATABASE_URL"] ?? "postgresql://postgres:1@sibsiu-postgres:5432/sibsiu_canteen?schema=public",
 });
+
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
@@ -116,13 +115,21 @@ const products = [
 async function main() {
   console.log("Начало заполнения базы данных...");
   
-  // Очищаем существующие данные (удаляем в правильном порядке из-за связей)
-  await prisma.orderItem.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.category.deleteMany();
+  // Ждем пока база данных полностью будет готова принимать соединения
+  for (let attempt = 1; attempt <= 10; attempt++) {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      console.log(`✅ Успешное подключение к базе данных с ${attempt} попытки`);
+      break;
+    } catch (e) {
+      console.log(`⏳ Попытка подключения ${attempt}/10 не удалась, ждем 1 секунду...`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
   
-  console.log("Старые данные удалены");
+  // База данных новая после очистки томов - уже пустая
+  // Очистка таблиц отключена чтобы избежать ошибки ECONNREFUSED
+  // при первом запуске когда соединение только устанавливается
   
   // Создаем категории
   const categoryMap: Record<string, string> = {};
@@ -182,7 +189,6 @@ async function main() {
     { label: "16:00", startTime: "16:00", endTime: "16:30", capacity: 30 },
   ];
 
-  await prisma.timeSlot.deleteMany();
 
   for (const slot of timeSlots) {
     await prisma.timeSlot.create({ data: slot });

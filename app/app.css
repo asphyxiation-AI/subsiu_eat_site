@@ -3,7 +3,7 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   
-  /* Яркая корпоративная палитра СибГИУ */
+  /* Корпоративная палитра СибГИУ */
   --color-sib-blue: #0066CC;
   --color-sib-light: #00AAFF;
   --color-sib-cyan: #00D4FF;

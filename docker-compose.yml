@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Keycloak Identity Provider
   keycloak:
@@ -14,7 +12,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./keycloak/realms:/opt/keycloak/data/havip/import:ro
+      - ./keycloak/realms:/opt/keycloak/data/import:ro
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e 'GET /health/ready HTTP/1.1\r\nhost: localhost\r\n\r\n' >&3;if [ $? -eq 0 ];then echo 'Healthcheck Successful';exit 0;else echo 'Healthcheck Failed';exit 1;fi;"]
       interval: 10s
@@ -109,7 +107,7 @@ services:
       - sibsiu-network
     restart: unless-stopped
 
-  # Application
+ # Application
   app:
     build:
       context: .
@@ -117,15 +115,22 @@ services:
     container_name: sibsiu-app
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:1@postgres:5432/sibsiu_canteen?schema=public
-      SERVER_KEYCLOAK_CLIENT_SECRET: VCHfWLinO4Vx8hM2e4a8fVpflPuSButf
+      DATABASE_URL: postgresql://postgres:1@sibsiu-postgres:5432/sibsiu_canteen?schema=public
+      PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK: "1"
+      KEYCLOAK_SERVER_URL: http://sibsiu-keycloak:8080
+      SERVER_KEYCLOAK_CLIENT_SECRET: Nq8l2hgmjEnmB7OoNiygbWbOm8zRHsPd
+      # URL для браузера (Keycloak перенаправит сюда после входа)
       VITE_KEYCLOAK_URL: http://localhost:8080
       VITE_KEYCLOAK_REALM: canteen
       VITE_KEYCLOAK_CLIENT_ID: canteen-web
-      VITE_APP_URL: http://localhost:5173
+      # Теперь заходим через 3001, чтобы не мешать Grafana
+      VITE_APP_URL: http://localhost:3001
       VITE_PAYMENT_URL: https://pay.sibsiu.ru/
+      # Важно: заставляем сервер слушать все интерфейсы внутри контейнера
+      PORT: 5173
+      HOST: 0.0.0.0 
     ports:
-      - "5173:5173"
+      - "3001:5173" # Внешний порт 3001 -> Внутренний 5173
     depends_on:
       postgres:
         condition: service_healthy

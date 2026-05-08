@@ -20,17 +20,20 @@ function parseCookies(cookieHeader: string | null): Record<string, string> {
   return cookies;
 }
 
-// Вспомогательная функция для декодирования JWT токена
+// Вспомогательная функция для декодирования JWT токена (ИСПРАВЛЕННАЯ)
 function decodeJWT(token: string): any {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
     
     // Декодируем payload (вторая часть)
-    const payload = parts[1];
-    // Добавляем padding если нужно
-    const padded = payload + "=".repeat((4 - payload.length % 4) % 4);
-    const decoded = atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
+    const base64Url = parts[1];
+    // Заменяем символы base64url на стандартный base64
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    
+    // Используем Buffer.from вместо atob для поддержки кириллицы (UTF-8)
+    const decoded = Buffer.from(base64, "base64").toString("utf-8");
+    
     return JSON.parse(decoded);
   } catch (e) {
     console.error("JWT decode error:", e);

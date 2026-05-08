@@ -1,12 +1,11 @@
 /** @type {import('jest').Config} */
 module.exports = {
-  // Использовать jsdom для React
+  // jsdom имитирует окружение браузера в Node.js. 
+  // Это критично для тестирования React-компонентов (рендеринг, клики).
   testEnvironment: 'jsdom',
   
-  // Корневые директории для поиска тестов
   roots: ['<rootDir>/app', '<rootDir>/tests'],
   
-  // Файлы для поиска
   testMatch: [
     '**/*.test.ts',
     '**/*.test.tsx',
@@ -14,42 +13,43 @@ module.exports = {
     '**/*.spec.tsx',
   ],
   
-  // Трансформация файлов
+  // Трансформация TypeScript кода в понятный для Jest формат через ts-jest.
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: 'tsconfig.json',
     }],
   },
   
-  // Модули
+  // Маппинг путей для тестов
   moduleNameMapper: {
+    // Поддержка alias из tsconfig, чтобы тесты понимали импорты через '@/' или '~/'
     '^@/(.*)$': '<rootDir>/app/$1',
+    // Игнорирование стилей при тестах. Стили не влияют на логику, поэтому мы заменяем их «заглушкой».
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   
-  // Setup файлы
+  // Файл расширения ожиданий (например, для добавления .toBeInTheDocument())
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   
-  // Игнорируемые директории
   testPathIgnorePatterns: [
     '/node_modules/',
     '/build/',
     '/dist/',
   ],
   
-  // Collect coverage
+  // Настройка сбора покрытия кода тестами (Code Coverage)
+  // Показывает, какой процент логики сайта столовой реально протестирован.
   collectCoverageFrom: [
     'app/**/*.{ts,tsx}',
     '!app/**/*.d.ts',
     '!app/**/*.stories.{ts,tsx}',
   ],
   
-  // Coverage directory
   coverageDirectory: 'coverage',
   
-  // Coverage reporters
+  // Отчеты: text (в консоли), lcov/html (красивые страницы с результатами)
   coverageReporters: ['text', 'lcov', 'html'],
   
-  // Timeout
+  // Таймаут увеличен до 10с для тяжелых интеграционных тестов
   testTimeout: 10000,
 };
