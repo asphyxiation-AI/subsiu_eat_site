@@ -152,10 +152,24 @@ export interface UserProfile {
   roles: string[];
 }
 
+// Функция для декодирования base64 в UTF-8 (браузер-совместимая)
+function base64Decode(encoded: string): string {
+  // Заменяем символы base64url на стандартный base64
+  const base64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
+  
+  // Используем TextDecoder для корректной работы с UTF-8
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
 // Функция для получения профиля пользователя из токена
 export function getUserProfile(token: string): UserProfile | null {
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
+    const payload = JSON.parse(base64Decode(token.split(".")[1]));
     
     const firstName = payload.given_name || payload.name?.split(" ")[0] || "";
     const lastName = payload.family_name || payload.name?.split(" ")[1] || "";
