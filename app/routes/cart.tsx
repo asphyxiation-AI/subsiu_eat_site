@@ -37,7 +37,6 @@ export async function loader() {
       id: slot.id,
       label: slot.label,
       startTime: slot.startTime,
-      endTime: slot.endTime,
       capacity: slot.capacity,
       booked: slot._count.orders
     }))

@@ -2,8 +2,6 @@
  * API route для создания заказа с валидацией
  */
 
-
-
 // Вспомогательная функция для парсинга куки
 function parseCookies(cookieHeader: string | null): Record<string, string> {
   const cookies: Record<string, string> = {};
@@ -162,15 +160,27 @@ export async function action({ request }: { request: Request }) {
 
     // Создаём заказ
     // Вычисляем время получения на основе сегодняшней даты и времени слота
+    // timeSlot.startTime хранит время в часовом поясе Новосибирска (UTC+7),
+    // но сервер работает в UTC - конвертируем Novosibirsk время в UTC
     const [pickupHours, pickupMinutes] = timeSlot.startTime.split(':').map(Number);
-    const pickupTimeDate = new Date();
-    pickupTimeDate.setHours(pickupHours, pickupMinutes, 0, 0);
+    
+    // Получаем текущее UTC время и сдвигаем на +7ч, чтобы получить "текущую дату в Новосибирске"
+    const NOVOSIBIRSK_OFFSET_MS = 7 * 60 * 60 * 1000;
+    const now = new Date();
+    const novosibirskDate = new Date(now.getTime() + NOVOSIBIRSK_OFFSET_MS);
+    
+    // Устанавливаем время слота на эту "Новосибирскую" дату
+    novosibirskDate.setUTCHours(pickupHours, pickupMinutes, 0, 0);
+    
+    // Конвертируем обратно в UTC (вычитаем смещение +7ч)
+    const pickupTimeDate = new Date(novosibirskDate.getTime() - NOVOSIBIRSK_OFFSET_MS);
     
     // Логируем данные перед созданием заказа
     console.log("Создание заказа:", {
       userSub,
       totalPrice,
       pickupTime: pickupTimeDate,
+      pickupTimeISO: pickupTimeDate.toISOString(),
       timeSlotId: timeSlot.id,
       items: items,
     });

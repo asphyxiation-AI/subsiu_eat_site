@@ -151,7 +151,7 @@ export async function action({ request }: Route.ActionArgs) {
       const weekType = parseInt(formData.get("weekType") as string);
       const category = await prisma.category.findFirst({ where: { name: categoryName } });
       if (!category) return { success: false, message: "Категория не найдена" };
-       const finalImage = image || "/bludo412.png";
+       const finalImage = image;
       if (intent === "create") {
         await prisma.product.create({ data: { name, description, price, categoryId: category.id, image: finalImage, isAvailable, isVisible, dayOfWeek, weekType } });
         return { success: true, message: "Блюдо добавлено" };
@@ -176,6 +176,9 @@ export default function AdminMenu({ loaderData }: Route.ComponentProps) {
   const [imagePreview, setImagePreview] = useState("");
   const [filterDay, setFilterDay] = useState<number | null>(null);
   const [filterWeek, setFilterWeek] = useState<number | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteAllPending, setDeleteAllPending] = useState(false);
   const isAdmin = hasRole("admin");
 
   if (!isAuthenticated) return <div className="container mx-auto px-4 py-16"><div className="max-w-md mx-auto text-center"><h1 className="text-2xl font-bold text-gray-900 mb-4">Требуется авторизация</h1><Link to="/profile" className="text-sib-blue hover:underline">Войти в систему</Link></div></div>;
@@ -185,7 +188,7 @@ export default function AdminMenu({ loaderData }: Route.ComponentProps) {
   const groupedProducts = categories.reduce((acc, category) => { acc[category] = filteredProducts.filter((p: Product) => p.category === category); return acc; }, {} as Record<string, Product[]>);
 
   const handleEdit = (product: Product) => { setEditingProduct(product); setImagePreview(product.image || ""); setShowForm(true); };
-  const handleDelete = (id: string) => { if (confirm("Удалить это блюдо?")) fetcher.submit({ intent: "delete", id }, { method: "post" }); };
+  const handleDelete = (id: string) => { setDeleteTargetId(id); setDeleteAllPending(false); setShowDeleteConfirm(true); };
   const handleToggleVisibility = (id: string) => fetcher.submit({ intent: "toggleVisibility", id }, { method: "post" });
   const handlePublish = (weekType: number) => fetcher.submit({ intent: "publish", weekType: weekType.toString() }, { method: "post" });
   
@@ -198,14 +201,26 @@ export default function AdminMenu({ loaderData }: Route.ComponentProps) {
   };
   
   const handleDeleteAll = () => {
-    if (confirm(`Удалить ВСЕ ${filteredProducts.length} отфильтрованных блюд? Это действие нельзя отменить!`)) {
+    setDeleteTargetId(null);
+    setDeleteAllPending(true);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteAllPending) {
       const formData = new FormData();
       formData.append("intent", "deleteAll");
       if (filterDay !== null) formData.append("filterDay", filterDay.toString());
       if (filterWeek !== null) formData.append("filterWeek", filterWeek.toString());
       fetcher.submit(formData, { method: "post" });
+    } else if (deleteTargetId) {
+      fetcher.submit({ intent: "delete", id: deleteTargetId }, { method: "post" });
     }
+    setShowDeleteConfirm(false);
+    setDeleteTargetId(null);
+    setDeleteAllPending(false);
   };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => { const file = e.target.files?.[0]; if (file) { if (file.size > 2 * 1024 * 1024) { alert("Файл слишком большой"); return; } const reader = new FileReader(); reader.onloadend = () => setImagePreview(reader.result as string); reader.readAsDataURL(file); } };
   const handleCloseForm = () => { setShowForm(false); setEditingProduct(null); setImagePreview(""); };
   const clearFilters = () => { setFilterDay(null); setFilterWeek(null); };
@@ -301,6 +316,41 @@ export default function AdminMenu({ loaderData }: Route.ComponentProps) {
                 </div>
                 <div className="flex gap-3 mt-6"><button type="button" onClick={handleCloseForm} className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50">Отмена</button><button type="submit" className="flex-1 flex items-center justify-center gap-2 bg-sib-blue hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl"><Save className="w-5 h-5" />{editingProduct ? "Сохранить" : "Добавить"}</button></div>
               </fetcher.Form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="text-center">
+              <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                {deleteAllPending ? "Удалить все блюда?" : "Удалить это блюдо?"}
+              </h2>
+              <p className="text-gray-600 mb-6">
+                {deleteAllPending
+                  ? `Вы уверены, что хотите удалить все ${filteredProducts.length} отфильтрованных блюд? Это действие нельзя отменить!`
+                  : "Вы уверены, что хотите удалить это блюдо? Это действие нельзя отменить."}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setShowDeleteConfirm(false); setDeleteTargetId(null); setDeleteAllPending(false); }}
+                  className="flex-1 px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 font-medium"
+                >
+                  Отмена
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {deleteAllPending ? "Удалить все" : "Удалить"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

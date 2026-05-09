@@ -4,7 +4,6 @@ interface TimeSlot {
   id: string;
   label: string;
   startTime: string;
-  endTime: string;
   capacity: number;
   booked: number;
 }

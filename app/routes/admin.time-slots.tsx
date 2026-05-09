@@ -51,7 +51,6 @@ export async function action({ request }) {
       data: {
         label: time,
         startTime: time,
-        endTime: time,
         capacity
       }
     });
@@ -127,13 +126,12 @@ export async function action({ request }) {
       const m = time % 60;
       const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
       
-      slotsToCreate.push({
+       slotsToCreate.push({
         label: timeStr,
         startTime: timeStr,
-        endTime: timeStr,
         capacity,
         isEnabled: true
-      });
+       });
     }
 
     await prisma.timeSlot.createMany({

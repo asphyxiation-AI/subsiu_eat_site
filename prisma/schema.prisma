@@ -75,7 +75,6 @@ model TimeSlot {
   id        String  @id @default(uuid())
   label     String
   startTime String
-  endTime   String
   capacity  Int
   isEnabled Boolean @default(true)
   orders    Order[]
