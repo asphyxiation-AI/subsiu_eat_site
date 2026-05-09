@@ -92,6 +92,7 @@ export async function loader({ request }: { request: Request }) {
           return data(
             {
               authenticated: true,
+              accessToken: newAccessToken,
               user: {
                 id: payload.sub,
                 username: payload.preferred_username || payload.email,
@@ -125,6 +126,7 @@ export async function loader({ request }: { request: Request }) {
   // Токен валиден
   return data({
     authenticated: true,
+    accessToken,
     user: {
       id: payload.sub,
       username: payload.preferred_username || payload.email,

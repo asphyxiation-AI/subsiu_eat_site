@@ -161,7 +161,7 @@ export default function Profile() {
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <span className="text-sm text-gray-500">Заказ #{order.orderNumber}</span>
-                      <p className="text-sm text-gray-600">{order.pickupTime ? new Date(order.pickupTime).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : "Не указано"}</p>
+                      <p className="text-sm text-gray-600">{order.pickupTime ? new Date(order.pickupTime).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) : "Не указано"}</p>
                     </div>
                     {getStatusBadge(order.status)}
                   </div>

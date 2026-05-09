@@ -62,15 +62,27 @@ export async function action({ request }: { request: Request }) {
   }
 
   try {
+    // Логируем заголовок Authorization для диагностики
+    const authHeader = request.headers.get("Authorization");
+    console.log("Получен токен (Authorization):", authHeader);
+
     const cookieHeader = request.headers.get("Cookie");
     const cookies = parseCookies(cookieHeader);
     const accessToken = cookies["access_token"];
 
-    if (!accessToken) {
+    // Определяем токен: сначала из Authorization: Bearer, потом из cookie
+    let token: string | null = null;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.slice(7);
+    } else if (accessToken) {
+      token = accessToken;
+    }
+
+    if (!token) {
       return Response.json({ error: "Не авторизован" }, { status: 401 });
     }
 
-    const payload = decodeToken(accessToken);
+    const payload = decodeToken(token);
     const userSub = payload?.sub || "anonymous";
 
     // Проверка Content-Type
@@ -149,11 +161,25 @@ export async function action({ request }: { request: Request }) {
     }
 
     // Создаём заказ
+    // Вычисляем время получения на основе сегодняшней даты и времени слота
+    const [pickupHours, pickupMinutes] = timeSlot.startTime.split(':').map(Number);
+    const pickupTimeDate = new Date();
+    pickupTimeDate.setHours(pickupHours, pickupMinutes, 0, 0);
+    
+    // Логируем данные перед созданием заказа
+    console.log("Создание заказа:", {
+      userSub,
+      totalPrice,
+      pickupTime: pickupTimeDate,
+      timeSlotId: timeSlot.id,
+      items: items,
+    });
+    
     const order = await prisma.order.create({
       data: {
         userSub,
         totalPrice,
-        pickupTime: new Date(`1970-01-01T${timeSlot.startTime}:00`),
+        pickupTime: pickupTimeDate,
         timeSlotId: timeSlot.id,
         scheduledDate: today,
         status: "PREPARING",

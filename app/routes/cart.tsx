@@ -54,7 +54,7 @@ export function meta() {
 export default function Cart() {
   const { slots } = useLoaderData<typeof loader>();
   const { items, removeItem, updateQuantity, totalPrice, totalItems, clearCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token } = useAuth();
   const navigate = useNavigate();
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -98,9 +98,19 @@ export default function Cart() {
 
     // Создаём заказ
     try {
+      // Добавляем проверку суммы перед отправкой
+      if (totalPrice <= 0 || totalPrice > 100000) {
+        setError("Сумма заказа должна быть от 1 до 100 000 ₽");
+        setIsSubmitting(false);
+        return;
+      }
+
       const response = await fetch("/api/create-order", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           items,
           timeSlotId: selectedSlotId,

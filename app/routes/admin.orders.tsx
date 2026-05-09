@@ -9,9 +9,7 @@ import {
   Filter,
   Search
 } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
 import { prisma } from "../lib/db.server";
-import { formatDate, formatTime, getCurrentCycleDay } from "../lib/timezone";
 import type { Route } from "./+types/admin.orders";
 
 export function meta({}: Route.MetaArgs) {
@@ -32,13 +30,13 @@ interface OrderItem {
 
 interface Order {
   id: string;
-  createdAt: Date;
   totalPrice: number;
   pickupTime: string;
   status: OrderStatus;
   userName: string;
   userGroup: string;
   items: OrderItem[];
+  createdAtISO: string;
 }
 
 export async function loader() {
@@ -47,16 +45,15 @@ export async function loader() {
       prisma.order.findMany({
         orderBy: { createdAt: "desc" },
         include: { orderItems: true },
-        take: 500, // ✅ Показываем 500 последних заказов - более чем достаточно для работы
+        take: 500,
       }),
       prisma.order.count()
     ]);
 
     const formattedOrders = orders.map((order) => ({
       id: order.id,
-      createdAt: order.createdAt,
       totalPrice: Number(order.totalPrice),
-      pickupTime: order.pickupTime ? formatTime(order.pickupTime) : "",
+      pickupTime: order.pickupTime ? order.pickupTime.toISOString() : "",
       status: order.status as OrderStatus,
       userName: order.userSub || "Гость",
       userGroup: "",
@@ -66,6 +63,7 @@ export async function loader() {
         price: Number(item.price),
         quantity: item.quantity,
       })),
+      createdAtISO: order.createdAt.toISOString(),
     }));
 
     return { orders: formattedOrders, totalCount };
@@ -109,10 +107,10 @@ function getStatusColor(status: OrderStatus): string {
 
 function getStatusText(status: OrderStatus): string {
   switch (status) {
-    case "PENDING": return "Принят";
-    case "PREPARING": return "Готовится";
-    case "READY": return "Готов";
     case "COMPLETED": return "Выдан";
+    case "READY": return "Готов";
+    case "PREPARING": return "Готовится";
+    case "PENDING": return "Принят";
     case "CANCELLED": return "Отменён";
     default: return status;
   }
@@ -125,21 +123,63 @@ const statusFilters = [
   { value: "COMPLETED", label: "Выдан" },
 ];
 
-export default function AdminOrders({ loaderData }: Route.ComponentProps) {
-  const { orders } = loaderData;
-  const { isAuthenticated, hasRole, user } = useAuth();
-  const fetcher = useFetcher();
-  
-  // Проверка роли админа через AuthContext
-  const isAdmin = hasRole("admin");
-  
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [searchQuery, setSearchQuery] = useState("");
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [pendingCount, setPendingCount] = useState(0);
-  const prevPendingRef = useRef(0);
+function formatDateTime(isoString: string): string {
+  const d = new Date(isoString);
+  return d.toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }) + " " + d.toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
-  if (!isAuthenticated) {
+export default function AdminOrders({ loaderData }: Route.ComponentProps) {
+  const [mounted, setMounted] = useState(false);
+  const [auth, setAuth] = useState<{ isAuthenticated: boolean; isAdmin: boolean; fullName: string | null } | null>(null);
+
+  useEffect(() => {
+    // Запрашиваем статус авторизации напрямую (без хука useAuth)
+    fetch("/api/check-auth", { credentials: "include" })
+      .then((res) => {
+        if (!res.ok) {
+          setAuth({ isAuthenticated: false, isAdmin: false, fullName: null });
+          setMounted(true);
+          return null;
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (data && data.authenticated) {
+          const roles = data.user?.roles || [];
+          setAuth({
+            isAuthenticated: true,
+            isAdmin: roles.includes("admin"),
+            fullName: data.user?.fullName || data.user?.username || null,
+          });
+        } else {
+          setAuth({ isAuthenticated: false, isAdmin: false, fullName: null });
+        }
+        setMounted(true);
+      })
+      .catch(() => {
+        setAuth({ isAuthenticated: false, isAdmin: false, fullName: null });
+        setMounted(true);
+      });
+  }, []);
+
+  if (!mounted || !auth) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center py-16">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0066CC]"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!auth.isAuthenticated) {
     return (
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-md mx-auto text-center">
@@ -150,7 +190,7 @@ export default function AdminOrders({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  if (!isAdmin) {
+  if (!auth.isAdmin) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
@@ -165,6 +205,19 @@ export default function AdminOrders({ loaderData }: Route.ComponentProps) {
       </div>
     );
   }
+
+  return <AdminOrdersInner loaderData={loaderData} auth={auth} />;
+}
+
+function AdminOrdersInner({ loaderData, auth }: { loaderData: { orders: Order[]; totalCount: number }; auth: { isAuthenticated: boolean; isAdmin: boolean; fullName: string | null } }) {
+  const { orders } = loaderData;
+  const fetcher = useFetcher();
+  
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
+  const prevPendingRef = useRef(0);
 
   const filteredOrders = orders.filter((order) => {
     if (statusFilter !== "ALL" && order.status !== statusFilter) return false;
@@ -188,7 +241,6 @@ export default function AdminOrders({ loaderData }: Route.ComponentProps) {
     fetcher.submit({ orderId, status: newStatus }, { method: "post" });
   };
 
-
   return (
     <div className="container mx-auto px-4 py-8">
       <audio ref={audioRef} src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2Onp2XjoCAgIaUn56agYF/d3N0g4iIiYOAenZ1g4mJiYR9enZ0g4mJiYR7eXdzg4mJiYR7eXdzg4mJiYR6eXdzg4mJiYR6eXdzg4mJiYR5eXdzg4mJiYR5eXdzg4mJiYR5eXdzg4mJiYR5eXdzg4mJiYR5eXdzg4mJiYR5eXdzg4mJiYR5eXdzg4mJiYQ=" preload="auto" />
@@ -198,7 +250,7 @@ export default function AdminOrders({ loaderData }: Route.ComponentProps) {
           <Link to="/" className="p-2 rounded-xl hover:bg-gray-100"><ArrowLeft className="w-6 h-6 text-gray-600" /></Link>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Заказы</h1>
-            <p className="text-gray-600">Администратор: {user?.fullName || user?.username}</p>
+            <p className="text-gray-600">Администратор: {auth.fullName}</p>
           </div>
         </div>
         {pendingCount > 0 && (
@@ -239,17 +291,17 @@ export default function AdminOrders({ loaderData }: Route.ComponentProps) {
                   <span className={`px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-semibold ${getStatusColor(order.status)} whitespace-nowrap`}>
                     {getStatusText(order.status)}
                     {order.pickupTime && (
-                      <span className="ml-1 font-normal opacity-90">{order.pickupTime}</span>
+                      <span className="ml-1 font-normal opacity-90">{formatDateTime(order.pickupTime)}</span>
                     )}
                   </span>
                 </div>
-                <div className="text-gray-500 text-xs sm:text-sm">{formatDate(order.createdAt)} {formatTime(order.createdAt)}</div>
+                <div className="text-gray-500 text-xs sm:text-sm">{formatDateTime(order.createdAtISO)}</div>
               </div>
 
               <div className="flex items-center gap-4 mb-4 text-gray-600 flex-wrap">
                 <div className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /><span className="text-sm">{order.userName}</span></div>
                 {order.pickupTime && order.status !== "READY" && (
-                  <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /><span className="text-sm font-semibold text-sib-blue">{order.pickupTime}</span></div>
+                  <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /><span className="text-sm font-semibold text-sib-blue">{formatDateTime(order.pickupTime)}</span></div>
                 )}
               </div>
 

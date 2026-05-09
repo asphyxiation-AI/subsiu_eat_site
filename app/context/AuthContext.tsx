@@ -16,6 +16,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: UserProfile | null;
+  token: string | null;
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   hasRole: (role: string) => boolean;
@@ -30,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   // Проверяем авторизацию при загрузке
   useEffect(() => {
@@ -47,6 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await response.json();
         if (data.authenticated && data.user) {
           setUser(data.user);
+          // Сохраняем токен для отправки в заголовках API
+          if (data.accessToken) {
+            setToken(data.accessToken);
+          }
           setIsAuthenticated(true);
           setIsLoading(false);
           return;
@@ -91,9 +97,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         roles: data.user.roles || ["student"],
       };
 
-      // Токены теперь хранятся в HTTP-only куках на сервере
-      // Здесь только сохраняем данные пользователя в память приложения
       setUser(userData);
+      // Сохраняем токен в память для отправки в заголовках API
+      if (data.accessToken) {
+        setToken(data.accessToken);
+      }
       setIsAuthenticated(true);
 
       return { success: true };
@@ -106,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     setIsAuthenticated(false);
     setUser(null);
+    setToken(null);
     
     // Диспетчим событие для очистки корзины
     window.dispatchEvent(new Event(LOGOUT_EVENT));
@@ -123,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         isLoading,
         user,
+        token,
         login,
         logout,
         hasRole,

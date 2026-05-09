@@ -200,6 +200,7 @@ export async function action({ request }: Route.ActionArgs) {
       success: true,
       user: userData,
       expiresIn: tokens.expires_in,
+      accessToken: tokens.access_token, // ← возвращаем токен клиенту
     }, {
       headers: {
         "Set-Cookie": `${accessTokenCookie}, ${refreshTokenCookie}`,
