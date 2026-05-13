@@ -210,7 +210,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const filteredMenu = menuItems.filter(item => item.category === activeCategory);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50" style={{ minWidth: '360px', overflowX: 'auto' }}>
       {/* Hero Section */}
       <section className="relative min-h-[70vh] flex items-center overflow-hidden">
         {/* Фоновые элементы */}
@@ -285,8 +285,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               </div>
             </div>
 
-            {/* Изображение */}
-            <div className={`relative transition-all duration-1000 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            {/* Изображение - скрыто на мобильных */}
+            <div className={`hidden md:block relative transition-all duration-1000 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
               <div className="relative">
                 {/* Основное изображение */}
                 <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-purple-500/20">
@@ -337,7 +337,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-400/20 to-purple-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
               <div className="relative z-10">
                 <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 shadow-lg shadow-violet-500/30">
-                  <Clock className="w-8 h-8 text-white" />
+                  <Clock className="w-6 h-6 md:w-8 md:h-8 text-white" />
                 </div>
                 <h3 className="text-lg md:text-2xl font-bold text-slate-800 mb-2 md:mb-3">Экономия времени</h3>
                 <p className="text-slate-600 leading-relaxed">
@@ -347,13 +347,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </div>
 
             {/* Карточка 2 */}
-            <div className="group relative bg-white/70 backdrop-blur-xl rounded-3xl p-8 border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+            <div className="group relative bg-white/70 backdrop-blur-xl rounded-3xl p-5 md:p-8 border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-0 md:hover:-translate-y-2 overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-400/20 to-amber-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
               <div className="relative z-10">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-orange-500/30">
-                  <Flame className="w-8 h-8 text-white" />
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 shadow-lg shadow-orange-500/30">
+                  <Flame className="w-6 h-6 md:w-8 md:h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-800 mb-3">Всегда горячее</h3>
+                <h3 className="text-lg md:text-2xl font-bold text-slate-800 mb-2 md:mb-3">Всегда горячее</h3>
                 <p className="text-slate-600 leading-relaxed">
                   Мы начинаем готовить ваш заказ заранее, чтобы к вашему приходу всё было свежим
                 </p>
@@ -361,13 +361,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </div>
 
             {/* Карточка 3 */}
-            <div className="group relative bg-white/70 backdrop-blur-xl rounded-3xl p-8 border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+            <div className="group relative bg-white/70 backdrop-blur-xl rounded-3xl p-5 md:p-8 border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-0 md:hover:-translate-y-2 overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
               <div className="relative z-10">
-                <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/30">
-                  <Wallet className="w-8 h-8 text-white" />
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 shadow-lg shadow-cyan-500/30">
+                  <Wallet className="w-6 h-6 md:w-8 md:h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-800 mb-3">Доступные цены</h3>
+                <h3 className="text-lg md:text-2xl font-bold text-slate-800 mb-2 md:mb-3">Доступные цены</h3>
                 <p className="text-slate-600 leading-relaxed">
                   Самые низкие цены на комплексные обеды для студентов
                 </p>
@@ -556,8 +556,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               </div>
             </div>
 
-            {/* Карта */}
-<div className="bg-white/80 backdrop-blur-xl rounded-3xl overflow-hidden border border-slate-200/50 shadow-lg h-[100%]">
+            {/* Карта - скрыта на мобильных как фото столовой */}
+<div className="hidden md:block bg-white/80 backdrop-blur-xl rounded-3xl overflow-hidden border border-slate-200/50 shadow-lg">
   <iframe
     src="https://yandex.ru/map-widget/v1/?ll=87.128618%2C53.756403&z=17&pt=87.128618%2C53.756403%2Cpm2rdm"
     width="100%"
@@ -567,6 +567,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     loading="lazy"
     allow="clipboard-write"
     title="Столовая СибГИУ"
+    style={{ touchAction: 'pan-y' }}
   />
 </div>
           </div>

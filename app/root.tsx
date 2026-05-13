@@ -5,6 +5,8 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
+  useLocation,
 } from "react-router";
 import { useState, useEffect, type ReactNode } from "react";
 import { Toaster } from "sonner";
@@ -13,7 +15,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { Layout as AppLayout } from "./components/layout/Layout";
 import { CartProvider } from "./context/CartContext";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AuthProvider, type InitialAuthData } from "./context/AuthContext";
 import { ConfirmProvider } from "./components/ui/ConfirmModal";
 
 
@@ -53,6 +55,53 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+// SSR loader: декодируем JWT из cookie, чтобы передать авторизацию на клиент
+// и избежать "мигания" неавторизованного состояния при гидратации
+export async function loader({ request }: Route.LoaderArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const cookies: Record<string, string> = {};
+  
+  if (cookieHeader) {
+    cookieHeader.split(";").forEach((cookie) => {
+      const parts = cookie.trim().split("=");
+      if (parts.length >= 2) {
+        cookies[parts[0]] = parts.slice(1).join("=");
+      }
+    });
+  }
+
+  const accessToken = cookies["access_token"];
+  
+  if (accessToken) {
+    try {
+      const base64Url = accessToken.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const decoded = Buffer.from(base64, "base64").toString("utf-8");
+      const payload = JSON.parse(decoded);
+      
+      const auth: InitialAuthData = {
+        isAuthenticated: true,
+        accessToken,
+        user: {
+          id: payload.sub,
+          username: payload.preferred_username || payload.email || payload.sub,
+          email: payload.email || "",
+          firstName: payload.given_name || "",
+          lastName: payload.family_name || "",
+          fullName: payload.name || `${payload.given_name || ""} ${payload.family_name || ""}`.trim() || payload.preferred_username,
+          group: payload.group || payload.study_group || "",
+          roles: payload.realm_access?.roles || [],
+        },
+      };
+      return { auth };
+    } catch (e) {
+      console.error("Failed to decode token in root loader:", e);
+    }
+  }
+  
+  return { auth: { isAuthenticated: false, user: null, accessToken: null } as InitialAuthData };
+}
+
 // Компонент для рендеринга только на клиенте (например, для Toaster)
 function ClientOnly({ children }: { children: () => ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -68,9 +117,8 @@ function ClientOnly({ children }: { children: () => ReactNode }) {
   return <>{children()}</>;
 }
 
-import { useLocation } from "react-router";
-
 export default function App() {
+  const { auth } = useLoaderData<typeof loader>();
   const location = useLocation();
   
   useEffect(() => {
@@ -82,7 +130,7 @@ export default function App() {
   }, [location.pathname]);
 
   return (
-    <AuthProvider>
+    <AuthProvider initialAuth={auth}>
       <CartProvider>
         <ConfirmProvider>
           <Toaster 

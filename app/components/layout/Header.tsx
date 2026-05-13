@@ -1,5 +1,5 @@
-import { ShoppingCart, User, Menu, Settings, LogOut } from "lucide-react";
-import { useState } from "react";
+import { ShoppingCart, User, Menu, Settings } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
@@ -10,6 +10,34 @@ export function Header() {
   const { totalItems } = useCart();
   const { isAuthenticated, hasRole, logout } = useAuth();
   const navigate = useNavigate();
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Закрывать меню при клике вне его
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (
+        mobileMenuRef.current && 
+        !mobileMenuRef.current.contains(e.target as Node) &&
+        menuButtonRef.current &&
+        !menuButtonRef.current.contains(e.target as Node)
+      ) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    
+    setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }, 0);
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
 
   // Проверка роли admin через AuthContext
   const isAdmin = hasRole("admin");
@@ -111,8 +139,9 @@ export function Header() {
                 </button>
               )}
             
-            {/* Мобильное меню */}
+            {/* Мобильное меню - кнопка */}
             <button 
+              ref={menuButtonRef}
               className="md:hidden p-3 rounded-2xl hover:bg-white/20 backdrop-blur-md transition-all duration-200"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
@@ -120,85 +149,93 @@ export function Header() {
             </button>
           </div>
         </div>
-
-        {/* Мобильное меню */}
-        {isMobileMenuOpen && (
-          <nav className="md:hidden py-4 border-t border-white/20 backdrop-blur-md bg-[#0066CC]/50">
-            <button
-              onClick={() => { navigate("/#menu"); setIsMobileMenuOpen(false); }}
-              className="block w-full text-left py-3 text-white/90 hover:text-white transition-all duration-200 font-medium bg-transparent border-none cursor-pointer"
-            >
-              Меню
-            </button>
-            <button
-              onClick={() => { navigate("/#about"); setIsMobileMenuOpen(false); }}
-              className="block w-full text-left py-3 text-white/90 hover:text-white transition-all duration-200 font-medium bg-transparent border-none cursor-pointer"
-            >
-              О нас
-            </button>
-            <button
-              onClick={() => { navigate("/#contacts"); setIsMobileMenuOpen(false); }}
-              className="block w-full text-left py-3 text-white/90 hover:text-white transition-all duration-200 font-medium bg-transparent border-none cursor-pointer"
-            >
-              Контакты
-            </button>
-            <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-white/20">
-              {/* Кнопка админа на мобильных */}
-              {isAuthenticated && isAdmin && (
-                <NavLink
-                  to="/admin"
-                  className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-gradient-to-r from-[#9B59B6] to-[#8E44AD] text-white font-bold shadow-lg no-underline"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Settings className="w-5 h-5" />
-                  Админка
-                </NavLink>
-              )}
-              
-              <NavLink 
-                to="/cart" 
-                className={({ isActive }) => 
-                  isActive ? "flex items-center justify-center gap-2 p-3 rounded-2xl bg-white/30 backdrop-blur-md transition-all duration-200 no-underline" :
-                  "flex items-center justify-center gap-2 p-3 rounded-2xl hover:bg-white/20 backdrop-blur-md transition-all duration-200 no-underline"
-                }
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <ShoppingCart className="w-5 h-5 text-white" />
-                <span className="text-white font-medium">Корзина</span>
-                {totalItems > 0 && (
-                  <span className="w-5 h-5 bg-[#FF3B30] rounded-full text-white text-xs flex items-center justify-center font-bold">
-                    {totalItems}
-                  </span>
-                )}
-              </NavLink>
-              
-              {isAuthenticated ? (
-                <NavLink 
-                  to="/profile" 
-                  className={({ isActive }) => 
-                    isActive ? "flex items-center justify-center gap-2 p-3 rounded-2xl bg-white/30 backdrop-blur-md transition-all duration-200 no-underline" :
-                    "flex items-center justify-center gap-2 p-3 rounded-2xl hover:bg-white/20 backdrop-blur-md transition-all duration-200 no-underline"
-                  }
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <User className="w-5 h-5 text-white" />
-                  <span className="text-white font-medium">Личный кабинет</span>
-                </NavLink>
-              ) : (
-                <button 
-                  onClick={() => {
-                    handleLogin();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-white text-[#0066CC] font-bold shadow-lg"
-                >
-                  Войти
-                </button>
-              )}
-            </div>
-          </nav>
-        )}
       </div>
+
+      {/* Мобильное меню - выпадает из хедера, не затемняет сайт */}
+      {isMobileMenuOpen && (
+        <>
+          {/* Прозрачный фон для закрытия при клике */}
+          <div className="fixed inset-0 md:hidden z-[-1]" onClick={() => setIsMobileMenuOpen(false)} />
+          
+          {/* Меню-список с градиентом как у хедера */}
+          <div 
+            ref={mobileMenuRef}
+            className="md:hidden bg-gradient-to-r from-[#0066CC] via-[#0099FF] to-[#00AAFF] shadow-2xl pb-3"
+          >
+            <div className="container mx-auto px-4">
+              <div className="flex flex-col gap-1 pt-1 border-t border-white/20">
+                <button
+                  onClick={() => { navigate("/#menu"); setIsMobileMenuOpen(false); }}
+                  className="block w-full text-left py-3 px-4 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 font-medium bg-transparent border-none cursor-pointer"
+                >
+                  🍽️ Меню
+                </button>
+                <button
+                  onClick={() => { navigate("/#about"); setIsMobileMenuOpen(false); }}
+                  className="block w-full text-left py-3 px-4 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 font-medium bg-transparent border-none cursor-pointer"
+                >
+                  📖 О нас
+                </button>
+                <button
+                  onClick={() => { navigate("/#contacts"); setIsMobileMenuOpen(false); }}
+                  className="block w-full text-left py-3 px-4 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 font-medium bg-transparent border-none cursor-pointer"
+                >
+                  📞 Контакты
+                </button>
+                
+                <div className="h-px bg-white/20 mx-2 my-1" />
+                
+                {/* Кнопка админа на мобильных */}
+                {isAuthenticated && isAdmin && (
+                  <NavLink
+                    to="/admin"
+                    className="flex items-center justify-center gap-2 py-3 px-4 mx-2 my-1 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold transition-all no-underline"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Settings className="w-5 h-5" />
+                    Админка
+                  </NavLink>
+                )}
+                
+                <NavLink 
+                  to="/cart" 
+                  className="flex items-center justify-center gap-2 py-3 px-4 mx-2 my-1 rounded-xl bg-white/20 hover:bg-white/30 text-white font-medium transition-all no-underline"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  <span>Корзина</span>
+                  {totalItems > 0 && (
+                    <span className="w-5 h-5 bg-[#FF3B30] rounded-full text-white text-xs flex items-center justify-center font-bold ml-1">
+                      {totalItems}
+                    </span>
+                  )}
+                </NavLink>
+                
+                {isAuthenticated ? (
+                  <NavLink 
+                    to="/profile" 
+                    className="flex items-center justify-center gap-2 py-3 px-4 mx-2 my-1 rounded-xl bg-white/20 hover:bg-white/30 text-white font-medium transition-all no-underline"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <User className="w-5 h-5" />
+                    <span>Личный кабинет</span>
+                  </NavLink>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      handleLogin();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center justify-center gap-2 py-3 px-4 mx-2 my-1 rounded-xl bg-white text-[#0066CC] font-bold shadow-lg"
+                  >
+                    Войти
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </header>
   );
 }

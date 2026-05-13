@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from "react";
 import { KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID } from "../constants/config";
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   username: string;
   email: string;
@@ -10,6 +10,12 @@ interface UserProfile {
   fullName?: string;
   group?: string;
   roles: string[];
+}
+
+export interface InitialAuthData {
+  isAuthenticated: boolean;
+  user: UserProfile | null;
+  accessToken: string | null;
 }
 
 interface AuthContextType {
@@ -27,14 +33,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Событие для очистки корзины при logout
 export const LOGOUT_EVENT = "sibgiu_logout";
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+export function AuthProvider({ children, initialAuth }: { children: ReactNode; initialAuth?: InitialAuthData | null }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(initialAuth?.isAuthenticated ?? false);
+  const [isLoading, setIsLoading] = useState(!initialAuth); // если нет начальных данных - грузим
+  const [user, setUser] = useState<UserProfile | null>(initialAuth?.user ?? null);
+  const [token, setToken] = useState<string | null>(initialAuth?.accessToken ?? null);
 
-  // Проверяем авторизацию при загрузке
+  // Проверяем авторизацию при загрузке (только если не было начальных данных)
   useEffect(() => {
+    if (initialAuth) {
+      // Начальные данные уже есть от сервера, просто завершаем загрузку
+      setIsLoading(false);
+      return;
+    }
     checkAuth();
   }, []);
 
