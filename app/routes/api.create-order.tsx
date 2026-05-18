@@ -1,6 +1,7 @@
 /**
  * API route для создания заказа с валидацией
  */
+import { getLocalStartOfDay, getLocalMinutesSinceMidnight, isWeekend } from "../lib/timezone";
 
 // Вспомогательная функция для парсинга куки
 function parseCookies(cookieHeader: string | null): Record<string, string> {
@@ -114,8 +115,7 @@ export async function action({ request }: { request: Request }) {
     }
 
     // Проверка слота на сервере
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getLocalStartOfDay();
 
     const timeSlot = await prisma.timeSlot.findUnique({
       where: { id: timeSlotId },
@@ -144,12 +144,16 @@ export async function action({ request }: { request: Request }) {
       return Response.json({ error: "Извините, этот интервал только что заполнился. Выберите другое время." }, { status: 409 });
     }
 
-    // Проверка что до начала слота больше 15 минут
-    const [hours, minutes] = timeSlot.startTime.split(':').map(Number);
-    const slotStartTime = new Date();
-    slotStartTime.setHours(hours, minutes, 0, 0);
+    // Проверка что до начала слота больше 15 минут (по UTC+7)
+    if (isWeekend()) {
+      return Response.json({ error: "В выходные заказы не принимаются" }, { status: 400 });
+    }
 
-    if (slotStartTime.getTime() - Date.now() < 15 * 60 * 1000) {
+    const nowMinutes = getLocalMinutesSinceMidnight();
+    const [slotHours, slotMinutes] = timeSlot.startTime.split(':').map(Number);
+    const slotTotalMinutes = slotHours * 60 + slotMinutes;
+
+    if (slotTotalMinutes - nowMinutes < 15) {
       return Response.json({ error: "Запись на этот слот уже закрыта" }, { status: 400 });
     }
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getLocalDate, getLocalDayOfWeek, isWeekend, getLocalMinutesSinceMidnight } from '../lib/timezone';
 
 interface TimeSlot {
   id: string;
@@ -15,30 +16,26 @@ interface TimeSlotPickerProps {
 }
 
 export default function TimeSlotPicker({ slots, selectedSlotId, onSelect }: TimeSlotPickerProps) {
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [, setTick] = useState(0);
 
   // Обновляем время каждую минуту чтобы скрывать слоты вовремя
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    const timer = setInterval(() => setTick(t => t + 1), 60000);
     return () => clearInterval(timer);
   }, []);
 
   const filteredSlots = slots.filter(slot => {
-    // Блокируем заказы в субботу (6) и воскресенье (0)
-    const dayOfWeek = currentTime.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
+    // Блокируем заказы в субботу (6) и воскресенье (0) — используем GMT+7
+    if (isWeekend()) {
       return false;
     }
 
     const [hours, minutes] = slot.startTime.split(':').map(Number);
-    const slotStartTime = new Date();
-    slotStartTime.setHours(hours, minutes, 0, 0);
+    const nowMinutes = getLocalMinutesSinceMidnight();
+    const slotTotalMinutes = hours * 60 + minutes;
 
-    // Убираем слот если до начала осталось меньше 15 минут
-    const timeUntilStart = slotStartTime.getTime() - currentTime.getTime();
-    const fifteenMinutes = 15 * 60 * 1000;
-
-    return timeUntilStart > fifteenMinutes;
+    // Убираем слот если до начала осталось меньше 15 минут (по GMT+7)
+    return (slotTotalMinutes - nowMinutes) > 15;
   });
 
   const handleSelect = (slotId: string) => {
@@ -50,13 +47,10 @@ export default function TimeSlotPicker({ slots, selectedSlotId, onSelect }: Time
   };
 
   if (filteredSlots.length === 0) {
-    const dayOfWeek = currentTime.getDay();
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
     return (
       <div className="text-center py-8 bg-gray-50 rounded-2xl border border-gray-200">
         <div className="text-5xl mb-3">⏰</div>
-        {isWeekend ? (
+        {isWeekend() ? (
           <>
             <p className="text-gray-600 text-lg font-medium">В выходные заказы не принимаются</p>
             <p className="text-gray-500 text-sm mt-1">Пожалуйста, попробуйте в будний день</p>

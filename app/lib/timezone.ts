@@ -1,15 +1,19 @@
-// Утилиты для работы с часовым поясом UTC+7 (Новосибирск)
+// Утилиты для работы с часовым поясом UTC+7 (Новокузнецк/Новосибирск)
 
-// Часовой пояс Новосибирска (UTC+7) - смещение в миллисекундах
-const TIMEZONE_OFFSET_MS = 7 * 60 * 60 * 1000; // 7 часов в миллисекундах
+// Часовой пояс Новокузнецка (UTC+7) - смещение в миллисекундах
+const NOVOKUZNETSK_OFFSET_MS = 7 * 60 * 60 * 1000; // 7 часов в миллисекундах
 
 /**
- * Получить текущую дату и время в часовом поясе UTC+7
- * Предполагаем, что сервер работает в UTC+7 (Новосибирск)
+ * Получить текущую дату и время в часовом поясе UTC+7 (Новокузнецк)
+ * Работает и на сервере (если сервер в UTC), и на клиенте (любой часовой пояс пользователя)
  */
 export function getLocalDate(): Date {
-  // Сервер работает в UTC+7 ( Novosibirsk), поэтому просто используем текущее время
-  return new Date();
+  const now = new Date();
+  // Разница между локальным временем пользователя/сервера и UTC+7
+  const localOffsetMs = now.getTimezoneOffset() * 60 * 1000; // getTimezoneOffset возвращает минуты, обратные UTC
+  const utcMs = now.getTime() + localOffsetMs; // переводим локальное время в UTC
+  const novosibirskMs = utcMs + NOVOKUZNETSK_OFFSET_MS; // добавляем смещение GMT+7
+  return new Date(novosibirskMs);
 }
 
 /**
@@ -36,7 +40,7 @@ export function getCurrentCycleDay(): { dayOfWeek: number; weekType: number } {
     dayOfWeek = 5; // Пятница
   }
   
-  // Вычисляем номер недели в году
+  // Вычисляем номер недели в году на основе UTC+7 даты
   const year = localDate.getFullYear();
   const startOfYear = new Date(Date.UTC(year, 0, 1));
   const pastDays = (localDate.getTime() - startOfYear.getTime()) / 86400000;
@@ -50,11 +54,9 @@ export function getCurrentCycleDay(): { dayOfWeek: number; weekType: number } {
 
 /**
  * Форматтер даты для отображения в UTC+7
- * Сервер работает в UTC+7, поэтому не нужно добавлять смещение
  */
 export function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  // Сервер в UTC+7 - просто форматируем как есть
   return d.toLocaleDateString('ru-RU', {
     day: '2-digit',
     month: '2-digit',
@@ -64,11 +66,9 @@ export function formatDate(date: Date | string): string {
 
 /**
  * Форматтер времени для отображения в UTC+7
- * Сервер работает в UTC+7, поэтому не нужно добавлять смещение
  */
 export function formatTime(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  // Сервер в UTC+7 - просто форматируем как есть
   return d.toLocaleTimeString('ru-RU', {
     hour: '2-digit',
     minute: '2-digit',
@@ -80,4 +80,42 @@ export function formatTime(date: Date | string): string {
  */
 export function formatDateTime(date: Date | string): string {
   return `${formatDate(date)} в ${formatTime(date)}`;
+}
+
+/**
+ * Получить текущую дату в UTC+7 с временем 00:00:00 (начало дня)
+ * Используется для серверной фильтрации записей по дате
+ */
+export function getLocalStartOfDay(): Date {
+  const localDate = getLocalDate();
+  localDate.setHours(0, 0, 0, 0);
+  return localDate;
+}
+
+/**
+ * Проверить, является ли текущий день в UTC+7 выходным
+ */
+export function isWeekend(): boolean {
+  const day = getLocalDayOfWeek();
+  return day === 0 || day === 6;
+}
+
+/**
+ * Получить текущее время в минутах от полуночи в часовом поясе UTC+7
+ */
+export function getLocalMinutesSinceMidnight(): number {
+  const localDate = getLocalDate();
+  return localDate.getHours() * 60 + localDate.getMinutes();
+}
+
+/**
+ * Проверить, прошло ли указанное время слота (startTime) относительно текущего UTC+7 времени
+ * Возвращает true, если до начала слота осталось меньше 15 минут
+ */
+export function isSlotClosed(startTime: string): boolean {
+  const [hours, minutes] = startTime.split(':').map(Number);
+  const slotTotalMinutes = hours * 60 + minutes;
+  const nowMinutes = getLocalMinutesSinceMidnight();
+  // Слот закрыт, если до него меньше 15 минут
+  return (slotTotalMinutes - nowMinutes) < 15;
 }

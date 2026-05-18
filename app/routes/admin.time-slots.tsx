@@ -9,8 +9,8 @@ import { useConfirm } from "../components/ui/ConfirmModal";
 export async function loader() {
 
   const { prisma } = await import("../lib/db.server");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const { getLocalStartOfDay } = await import("../lib/timezone");
+  const today = getLocalStartOfDay();
 
   const slots = await prisma.timeSlot.findMany({
     orderBy: { startTime: 'asc' },

@@ -6,11 +6,11 @@ import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import TimeSlotPicker from "../components/TimeSlotPicker";
 import { useConfirm } from "../components/ui/ConfirmModal";
+import { getLocalStartOfDay } from "../lib/timezone";
 
 export async function loader() {
   const { prisma } = await import("../lib/db.server");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getLocalStartOfDay();
 
   const slots = await prisma.timeSlot.findMany({
     where: { isEnabled: true },
